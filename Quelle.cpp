@@ -9,7 +9,7 @@ struct chess_figure :Shape {
 	chess_figure(){}
 };
 
-class Pawn :public chess_figure {
+class Pawn :public chess_figure {			//Bauer
 	int ssz;
 public:
 	Pawn(Point p,int x);
@@ -43,6 +43,52 @@ void Pawn::draw_lines()const {
 		fl_line(point(0).x + ssz / 5 * 4, point(0).y + ssz-bd , point(0).x + ssz / 12 * 7, point(0).y + ssz / 12 * 7);
 	}
 }
+
+class Knight :public chess_figure {		//Springer/Pferd
+	int ssz;
+public:
+	Knight(Point p, int x);
+	int scaling_size() { return ssz; }
+
+private:
+	void draw_lines()const;
+};
+class Rook :public chess_figure {		//Turm
+	int ssz;
+public:
+	Rook(Point p, int x);
+	int scaling_size() { return ssz; }
+
+private:
+	void draw_lines()const;
+};
+class Bishop :public chess_figure {		//Läufer
+	int ssz;
+public:
+	Bishop(Point p, int x);
+	int scaling_size() { return ssz; }
+
+private:
+	void draw_lines()const;
+};
+class King :public chess_figure {
+	int ssz;
+public:
+	King(Point p, int x);
+	int scaling_size() { return ssz; }
+
+private:
+	void draw_lines()const;
+};
+class Queen :public chess_figure {
+	int ssz;
+public:
+	Queen(Point p, int x);
+	int scaling_size() { return ssz; }
+
+private:
+	void draw_lines()const;
+};
 
 
 
