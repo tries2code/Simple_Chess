@@ -29,15 +29,11 @@ class Pawn :public chess_figure {
 	int ssz;
 	F_kind kind = F_kind::pawn;
 public:
-	Pawn(Point p, int x);
+	Pawn(Point p, int x) :ssz(x) { add(p); }
 	F_kind what_kind() { return kind; }
-
 private:
 	void draw_lines()const;
 };
-Pawn::Pawn(Point p, int x) :ssz(x) {
-	add(p);
-}
 void Pawn::draw_lines()const {
 	if (color().visibility()) {
 
@@ -76,24 +72,75 @@ class Rook :public chess_figure {		//Turm
 	int ssz;
 	F_kind kind = F_kind::rook;
 public:
-	Rook(Point p, int x);
+	Rook(Point p, int x) :ssz(x) { add(p); }
 	F_kind what_kind() { return kind; }
 private:
 	void draw_lines()const;
 };
+void Rook::draw_lines()const {
+	if (color().visibility()) {
+
+		//Füllung
+		fl_color(fill_color().as_int());
+		fl_begin_complex_polygon();
+		fl_vertex(point(0).x + ssz / 16 * 3, point(0).y + ssz - bd);
+		fl_vertex(point(0).x + ssz / 16 * 3, point(0).y + ssz / 16 * 14);
+		fl_vertex(point(0).x + ssz / 16 * 5, point(0).y + ssz / 16 * 14);
+		fl_vertex(point(0).x + ssz / 16 * 6, point(0).y + ssz / 16 * 6);
+		fl_vertex(point(0).x + ssz / 16 * 3, point(0).y + ssz / 16 * 6);
+		fl_vertex(point(0).x + ssz / 16 * 3, point(0).y + ssz / 16 * 2);
+		fl_vertex(point(0).x + ssz / 16 * 5, point(0).y + ssz / 16 * 2);
+		fl_vertex(point(0).x + ssz / 16 * 5, point(0).y + ssz / 16 * 4);
+		fl_vertex(point(0).x + ssz / 16 * 7, point(0).y + ssz / 16 * 4);
+		fl_vertex(point(0).x + ssz / 16 * 7, point(0).y + ssz / 16 * 2);
+		fl_vertex(point(0).x + ssz / 16 * 9, point(0).y + ssz / 16 * 2);
+		fl_vertex(point(0).x + ssz / 16 * 9, point(0).y + ssz / 16 * 4);
+		fl_vertex(point(0).x + ssz / 16 * 11, point(0).y + ssz / 16 * 4);
+		fl_vertex(point(0).x + ssz / 16 * 11, point(0).y + ssz / 16 * 2);
+		fl_vertex(point(0).x + ssz / 16 * 13, point(0).y + ssz / 16 * 2);
+		fl_vertex(point(0).x + ssz / 16 * 13, point(0).y + ssz / 16 * 6);
+		fl_vertex(point(0).x + ssz / 16 * 10, point(0).y + ssz / 16 * 6);
+		fl_vertex(point(0).x + ssz / 16 * 11, point(0).y + ssz / 16 * 14);
+		fl_vertex(point(0).x + ssz / 16 * 13, point(0).y + ssz / 16 * 14);
+		fl_vertex(point(0).x + ssz / 16 * 13, point(0).y + ssz - bd);
+		fl_end_complex_polygon();
+
+		//Umrandung
+		fl_color(color().as_int());
+		fl_line(point(0).x + ssz / 16 * 3, point(0).y + ssz - bd, point(0).x + ssz / 16 * 3, point(0).y + ssz / 16 * 14);
+		fl_line(point(0).x + ssz / 16 * 3, point(0).y + ssz / 16 * 14, point(0).x + ssz / 16 * 5, point(0).y + ssz / 16 * 14);
+		fl_line(point(0).x + ssz / 16 * 5, point(0).y + ssz / 16 * 14, point(0).x + ssz / 16 * 6, point(0).y + ssz / 16 * 6);
+		fl_line(point(0).x + ssz / 16 * 6, point(0).y + ssz / 16 * 6, point(0).x + ssz / 16 * 3, point(0).y + ssz / 16 * 6);
+		fl_line(point(0).x + ssz / 16 * 3, point(0).y + ssz / 16 * 6, point(0).x + ssz / 16 * 3, point(0).y + ssz / 16 * 2);
+		fl_line(point(0).x + ssz / 16 * 3, point(0).y + ssz / 16 * 2, point(0).x + ssz / 16 * 5, point(0).y + ssz / 16 * 2);
+		fl_line(point(0).x + ssz / 16 * 5, point(0).y + ssz / 16 * 2, point(0).x + ssz / 16 * 5, point(0).y + ssz / 16 * 4);
+		fl_line(point(0).x + ssz / 16 * 5, point(0).y + ssz / 16 * 4, point(0).x + ssz / 16 * 7, point(0).y + ssz / 16 * 4);
+		fl_line(point(0).x + ssz / 16 * 7, point(0).y + ssz / 16 * 4, point(0).x + ssz / 16 * 7, point(0).y + ssz / 16 * 2);
+		fl_line(point(0).x + ssz / 16 * 7, point(0).y + ssz / 16 * 2, point(0).x + ssz / 16 * 9, point(0).y + ssz / 16 * 2);
+		fl_line(point(0).x + ssz / 16 * 9, point(0).y + ssz / 16 * 2, point(0).x + ssz / 16 * 9, point(0).y + ssz / 16 * 4);
+		fl_line(point(0).x + ssz / 16 * 9, point(0).y + ssz / 16 * 4, point(0).x + ssz / 16 * 11, point(0).y + ssz / 16 * 4);
+		fl_line(point(0).x + ssz / 16 * 11, point(0).y + ssz / 16 * 4, point(0).x + ssz / 16 * 11, point(0).y + ssz / 16 * 2);
+		fl_line(point(0).x + ssz / 16 * 11, point(0).y + ssz / 16 * 2, point(0).x + ssz / 16 * 11, point(0).y + ssz / 16 * 2);
+		fl_line(point(0).x + ssz / 16 * 11, point(0).y + ssz / 16 * 2, point(0).x + ssz / 16 * 13, point(0).y + ssz / 16 * 2);
+		fl_line(point(0).x + ssz / 16 * 13, point(0).y + ssz / 16 * 2, point(0).x + ssz / 16 * 13, point(0).y + ssz / 16 * 6);
+		fl_line(point(0).x + ssz / 16 * 13, point(0).y + ssz / 16 * 6, point(0).x + ssz / 16 * 10, point(0).y + ssz / 16 * 6);
+		fl_line(point(0).x + ssz / 16 * 10, point(0).y + ssz / 16 * 6, point(0).x + ssz / 16 * 11, point(0).y + ssz / 16 * 14);
+		fl_line(point(0).x + ssz / 16 * 11, point(0).y + ssz / 16 * 14, point(0).x + ssz / 16 * 13, point(0).y + ssz / 16 * 14);
+		fl_line(point(0).x + ssz / 16 * 13, point(0).y + ssz / 16 * 14, point(0).x + ssz / 16 * 13, point(0).y + ssz - bd);
+		fl_line(point(0).x + ssz / 16 * 13, point(0).y + ssz - bd, point(0).x + ssz / 16 * 3, point(0).y + ssz - bd);
+	}
+}
+
 
 class Bishop :public chess_figure {		//Läufer
 	int ssz;
 	F_kind kind = F_kind::bishop;
 public:
-	Bishop(Point p, int x);
+	Bishop(Point p, int x) :ssz(x) { add(p); }
 	F_kind what_kind() { return kind; }
 private:
 	void draw_lines()const;
 };
-Bishop::Bishop(Point p, int x) :ssz(x) {
-	add(p);
-}
 void Bishop::draw_lines()const {
 	if (color().visibility()) {
 
@@ -122,13 +169,66 @@ class King :public chess_figure {
 	int ssz;
 	F_kind kind = F_kind::king;
 public:
-	King(Point p, int x);
+	King(Point p, int x) :ssz(x) { add(p); }
 
 	F_kind what_kind() { return kind; }
 
 private:
 	void draw_lines()const;
 };
+void King::draw_lines()const {
+	if (color().visibility()) {
+		//Füllung
+		fl_color(fill_color().as_int());
+		fl_begin_complex_polygon();
+		fl_vertex(point(0).x + ssz / 16 * 2, point(0).y + ssz - bd);
+		fl_vertex(point(0).x + ssz / 16 * 2, point(0).y + ssz / 16 * 15);
+		fl_vertex(point(0).x + ssz / 16 * 3, point(0).y + ssz / 16 * 14);
+		fl_vertex(point(0).x + ssz / 16 * 7, point(0).y + ssz / 16 * 6);
+		fl_vertex(point(0).x + ssz / 32 * 16, point(0).y + ssz / 16 * 3);
+		fl_vertex(point(0).x + ssz / 32 * 16, point(0).y + ssz / 16 * 2);
+		fl_vertex(point(0).x + ssz / 32 * 14, point(0).y + ssz / 16 * 2);
+		fl_vertex(point(0).x + ssz / 32 * 14, point(0).y + ssz / 16 * 1);
+		fl_vertex(point(0).x + ssz / 32 * 16, point(0).y + ssz / 16 * 1);
+		fl_vertex(point(0).x + ssz / 32 * 16, point(0).y + bd);
+		fl_vertex(point(0).x + ssz / 32 * 18, point(0).y + bd);
+		fl_vertex(point(0).x + ssz / 32 * 18, point(0).y + ssz / 16 * 1);
+		fl_vertex(point(0).x + ssz / 32 * 20, point(0).y + ssz / 16 * 1);
+		fl_vertex(point(0).x + ssz / 32 * 20, point(0).y + ssz / 16 * 2);
+		fl_vertex(point(0).x + ssz / 32 * 18, point(0).y + ssz / 16 * 2);
+		fl_vertex(point(0).x + ssz / 32 * 18, point(0).y + ssz / 16 * 3);
+		fl_vertex(point(0).x + ssz / 16 * 9, point(0).y + ssz / 16 * 6);
+		fl_vertex(point(0).x + ssz / 16 * 13, point(0).y + ssz / 16 * 14);
+		fl_vertex(point(0).x + ssz / 16 * 14, point(0).y + ssz / 16 * 15);
+		fl_vertex(point(0).x + ssz / 16 * 14, point(0).y + ssz - bd);
+		fl_end_complex_polygon();
+		fl_pie(point(0).x + ssz / 16 * 4 - bd, point(0).y + ssz / 16 * 3, ssz / 2, ssz / 6 + bd * 2, 0, 360);
+
+		//Umrandung
+		fl_color(color().as_int());
+		fl_line(point(0).x + ssz / 16 * 2, point(0).y + ssz - bd, point(0).x + ssz / 16 * 2, point(0).y + ssz / 16 * 15);
+		fl_line(point(0).x + ssz / 16 * 2, point(0).y + ssz / 16 * 15, point(0).x + ssz / 16 * 3, point(0).y + ssz / 16 * 14);
+		fl_line(point(0).x + ssz / 16 * 3, point(0).y + ssz / 16 * 14, point(0).x + ssz / 16 * 7, point(0).y + ssz / 16 * 6);
+		//fl_line(point(0).x + ssz / 16 * 7, point(0).y + ssz / 16 * 6, (point(0).x + ssz / 32 * 16, point(0).y + ssz / 16 * 3);	//Ausgelassen, wegen der Elipse
+		fl_line(point(0).x + ssz / 32 * 16, point(0).y + ssz / 16 * 3, point(0).x + ssz / 32 * 16, point(0).y + ssz / 16 * 2);
+		fl_line(point(0).x + ssz / 32 * 16, point(0).y + ssz / 16 * 2, point(0).x + ssz / 32 * 14, point(0).y + ssz / 16 * 2);
+		fl_line(point(0).x + ssz / 32 * 14, point(0).y + ssz / 16 * 2, point(0).x + ssz / 32 * 14, point(0).y + ssz / 16 * 1);
+		fl_line(point(0).x + ssz / 32 * 14, point(0).y + ssz / 16 * 1, point(0).x + ssz / 32 * 16, point(0).y + ssz / 16 * 1);
+		fl_line(point(0).x + ssz / 32 * 16, point(0).y + ssz / 16 * 1, point(0).x + ssz / 32 * 16, point(0).y + bd);
+		fl_line(point(0).x + ssz / 32 * 16, point(0).y + bd, point(0).x + ssz / 32 * 18, point(0).y + bd);
+		fl_line(point(0).x + ssz / 32 * 18, point(0).y + bd, point(0).x + ssz / 32 * 18, point(0).y + ssz / 16 * 1);
+		fl_line(point(0).x + ssz / 32 * 18, point(0).y + ssz / 16 * 1, point(0).x + ssz / 32 * 20, point(0).y + ssz / 16 * 1);
+		fl_line(point(0).x + ssz / 32 * 20, point(0).y + ssz / 16 * 1, point(0).x + ssz / 32 * 20, point(0).y + ssz / 16 * 2);
+		fl_line(point(0).x + ssz / 32 * 20, point(0).y + ssz / 16 * 2, point(0).x + ssz / 32 * 18, point(0).y + ssz / 16 * 2);
+		fl_line(point(0).x + ssz / 32 * 18, point(0).y + ssz / 16 * 2, point(0).x + ssz / 32 * 18, point(0).y + ssz / 16 * 3);
+		//fl_line(point(0).x + ssz / 32 * 18, point(0).y + ssz / 16 * 3, point(0).x + ssz / 16 * 9, point(0).y + ssz / 16 * 6);		//Ausgelassen, wegen der Elipse
+		fl_line(point(0).x + ssz / 16 * 9, point(0).y + ssz / 16 * 6, point(0).x + ssz / 16 * 13, point(0).y + ssz / 16 * 14);
+		fl_line(point(0).x + ssz / 16 * 13, point(0).y + ssz / 16 * 14, point(0).x + ssz / 16 * 14, point(0).y + ssz / 16 * 15);
+		fl_line(point(0).x + ssz / 16 * 14, point(0).y + ssz / 16 * 15, point(0).x + ssz / 16 * 14, point(0).y + ssz - bd);
+		fl_line(point(0).x + ssz / 16 * 14, point(0).y + ssz - bd, point(0).x + ssz / 16 * 2, point(0).y + ssz - bd);
+		fl_arc(point(0).x + ssz / 16 * 4 - bd, point(0).y + ssz / 16 * 3, ssz / 2, ssz / 6 + bd * 2, 0, 360);
+	}
+}
 
 class Queen :public chess_figure {
 	int ssz;
@@ -193,7 +293,10 @@ int main() try {
 
 	Graph_lib::Rectangle r{ {200,200},sz,sz };				//Test Feld um Proportionen der Figuren in den späteren Spielfeldern abschaätzen zu können 
 	//Pawn test({ 200,200 },sz);								// Bauer
-	Bishop test({ 200,200 }, sz);								// Läufer
+	//Bishop test({ 200,200 }, sz);								//Läufer
+	//Rook test({ 200,200 }, sz);								//Turm
+	King test({ 200,200 }, sz);
+
 
 	test.set_color(FL_RED);
 	test.set_fill_color(FL_GREEN);
@@ -202,9 +305,6 @@ int main() try {
 	win.attach(test);
 
 	win.wait_for_button();
-
-
-
 
 }
 catch (exception& e) {
