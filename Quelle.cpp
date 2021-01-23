@@ -1,7 +1,7 @@
 #include"Graph.h"
 #include"Simple_window.h"
 
-int sz = 100;									//Kommt später in die Fenster Klasse
+int sz = 250;									//Kommt später in die Fenster Klasse
 int bd = sz / 100;								//Abstand zum unteren Feld Rand
 
 enum class F_kind {								//Art der Spielfigur
@@ -60,7 +60,6 @@ void Pawn::draw_lines()const {
 	}
 }
 
-
 class Knight :public chess_figure {		//Springer/Pferd
 	int ssz;
 	F_kind kind = F_kind::knight;
@@ -73,7 +72,6 @@ private:
 	void draw_lines()const;
 };
 
-
 class Rook :public chess_figure {		//Turm
 	int ssz;
 	F_kind kind = F_kind::rook;
@@ -84,18 +82,42 @@ private:
 	void draw_lines()const;
 };
 
-
 class Bishop :public chess_figure {		//Läufer
 	int ssz;
 	F_kind kind = F_kind::bishop;
 public:
 	Bishop(Point p, int x);
-
 	F_kind what_kind() { return kind; }
-
 private:
 	void draw_lines()const;
 };
+Bishop::Bishop(Point p, int x) :ssz(x) {
+	add(p);
+}
+void Bishop::draw_lines()const {
+	if (color().visibility()) {
+
+		//Füllung
+		fl_color(fill_color().as_int());
+		fl_begin_complex_polygon();
+		fl_vertex(point(0).x + ssz / 12 * 7, point(0).y + ssz / 48 * 18);
+		fl_vertex(point(0).x + ssz / 12 * 5, point(0).y + ssz / 48 * 18);
+		fl_vertex(point(0).x + ssz / 4, point(0).y + ssz - bd);
+		fl_vertex(point(0).x + ssz / 4 * 3, point(0).y + ssz - bd);
+		fl_end_complex_polygon();
+		fl_pie(point(0).x + ssz / 50 * 20, point(0).y + ssz / 12, ssz / 6, ssz / 6, 0, 360);
+		fl_pie(point(0).x + ssz / 4 - bd, point(0).y + ssz / 5, ssz / 2, ssz / 6, 0, 360);
+
+		//Umrandung
+		fl_color(color().as_int());
+		fl_arc(point(0).x + ssz / 50 * 20, point(0).y + ssz / 12, ssz / 6, ssz / 6, 330, 217);
+		fl_arc(point(0).x + ssz / 4 - bd, point(0).y + ssz / 5, ssz / 2, ssz / 6, 0, 360);
+		fl_line(point(0).x + ssz / 12 * 5, point(0).y + ssz / 48 * 18, point(0).x + ssz / 4, point(0).y + ssz - bd);
+		fl_line(point(0).x + ssz / 4, point(0).y + ssz - bd, point(0).x + ssz / 4 * 3, point(0).y + ssz - bd);					//untere Linie
+		fl_line(point(0).x + ssz / 4 * 3, point(0).y + ssz - bd, point(0).x + ssz / 12 * 7, point(0).y + ssz / 48 * 18);
+	}
+}
+
 class King :public chess_figure {
 	int ssz;
 	F_kind kind = F_kind::king;
@@ -107,6 +129,7 @@ public:
 private:
 	void draw_lines()const;
 };
+
 class Queen :public chess_figure {
 	int ssz;
 	F_kind kind = F_kind::queen;
@@ -118,6 +141,8 @@ public:
 private:
 	void draw_lines()const;
 };
+
+
 
 
 class Chess_window : public Window {
@@ -167,8 +192,8 @@ int main() try {
 	Chess_window win{ {100,100},1000,800,"Schach" };
 
 	Graph_lib::Rectangle r{ {200,200},sz,sz };				//Test Feld um Proportionen der Figuren in den späteren Spielfeldern abschaätzen zu können 
-	Pawn test({ 200,200 }, sz);								// Bauer
-
+	//Pawn test({ 200,200 },sz);								// Bauer
+	Bishop test({ 200,200 }, sz);								// Läufer
 
 	test.set_color(FL_RED);
 	test.set_fill_color(FL_GREEN);
