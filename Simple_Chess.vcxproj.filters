@@ -53,5 +53,8 @@
     <ClInclude Include="Window.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="chess_figures.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
