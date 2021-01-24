@@ -37,7 +37,7 @@ class Chess_window : public Window {
 	Vector_ref<Button>field_buttons;					//Für die Knöppe unter den schwarzen Feldern
 	Vector_ref< Graph_lib::Rectangle>tiles;				//Für die Felder
 	Vector_ref<Chess_figure>figures;
-
+	vector<Point>ep;
 public:
 	Chess_window(Point xy, int w, int h, const string& title);
 	void wait_for_button();
@@ -45,6 +45,8 @@ public:
 private:
 	bool tile_empty(Point&)const;
 	bool hostile_present(Point&);
+	bool is_ep(Point);
+	void check_ep();
 	Chess_figure* get_figure(Point&);
 	void reset_f_color();
 	void refresh_figures();								//Ohne diese Funktion könne Figuren hinter den Felder verschwinden. Keine Ahnung warum.
@@ -113,6 +115,18 @@ bool Chess_window::hostile_present(Point& p) {
 	if (curr_figure->fill_color() == res->fill_color())return false;
 	return true;
 }
+bool Chess_window::is_ep(Point p) {
+	for (int i = 0; i < ep.size(); i++)if (p == ep[i])return true;
+	return false;
+}
+void Chess_window::check_ep() {
+	for (int i = 0; i < ep.size(); i++) {
+		bool check = false;
+		for (int j = 0; j < figures.size(); j++) if (ep[i] == figures[j].point(0) && figures[j].what_kind() == F_kind::pawn)check = true;
+
+		if (check == false)ep.erase(ep.begin() + i);
+	}
+}
 Chess_figure* Chess_window::get_figure(Point& p) {				//Ermittelt Figur
 
 	Chess_figure* res;
@@ -136,8 +150,9 @@ void Chess_window::refresh_figures() {
 	for (int i = 0; i < figures.size(); i++) attach(figures[i]);
 }
 
-void Chess_window::pawn_movement(Point& p) {				
+void Chess_window::pawn_movement(Point& p) {
 	Point start{ curr_figure->point(0) };
+
 	int x = 0;
 	int y = 0;
 	if (curr_figure->fill_color() == Color::white) {
@@ -146,9 +161,31 @@ void Chess_window::pawn_movement(Point& p) {
 			x = -sz;
 			y = -sz;
 		}
+		if (p.x == curr_figure->point(0).x - sz && is_ep({ start.x - sz,start.y })) {
+			x = -sz;
+			y = -sz;
+			Point temp{ start.x - sz, start.y };
+			for (int i = 0; i < figures.size(); i++) {
+				if (figures[i].point(0) == temp) {
+					detach(figures[i]);
+					figures.erase(i);
+				}
+			}
+		}
 		if (p.x == curr_figure->point(0).x + sz && hostile_present(p)) {
 			x = sz;
 			y = -sz;
+		}
+		if (p.x == curr_figure->point(0).x + sz && is_ep({ start.x + sz,start.y })) {
+			x = sz;
+			y = -sz;
+			Point temp{ start.x + sz, start.y };
+			for (int i = 0; i < figures.size(); i++) {
+				if (figures[i].point(0) == temp) {
+					detach(figures[i]);
+					figures.erase(i);
+				}
+			}
 		}
 		if (p.x == curr_figure->point(0).x && p.y == curr_figure->point(0).y - sz && !hostile_present(p)) {
 			x = 0;
@@ -157,6 +194,7 @@ void Chess_window::pawn_movement(Point& p) {
 		if (curr_figure->point(0).y == sz * 6 && p.y == curr_figure->point(0).y - sz * 2 && p.x == curr_figure->point(0).x && !hostile_present(p)) {
 			x = 0;
 			y = -(sz * 2);
+			ep.push_back({ p.x ,p.y });
 		}
 	}
 	if (curr_figure->fill_color() == Color::black) {
@@ -165,9 +203,31 @@ void Chess_window::pawn_movement(Point& p) {
 			x = -sz;
 			y = sz;
 		}
+		if (p.x == curr_figure->point(0).x - sz && is_ep({ start.x - sz,start.y })) {
+			x = -sz;
+			y = sz;
+			Point temp{ start.x - sz, start.y };
+			for (int i = 0; i < figures.size(); i++) {
+				if (figures[i].point(0) == temp) {
+					detach(figures[i]);
+					figures.erase(i);
+				}
+			}
+		}
 		if (p.x == curr_figure->point(0).x + sz && hostile_present(p)) {
 			x = sz;
 			y = sz;
+		}
+		if (p.x == curr_figure->point(0).x + sz && is_ep({ start.x + sz,start.y })) {
+			x = sz;
+			y = sz;
+			Point temp{ start.x + sz, start.y };
+			for (int i = 0; i < figures.size(); i++) {
+				if (figures[i].point(0) == temp) {
+					detach(figures[i]);
+					figures.erase(i);
+				}
+			}
 		}
 		if (p.x == curr_figure->point(0).x && p.y == curr_figure->point(0).y + sz && !hostile_present(p)) {
 			x = 0;
@@ -176,6 +236,8 @@ void Chess_window::pawn_movement(Point& p) {
 		if (curr_figure->point(0).y == sz && p.y == curr_figure->point(0).y + sz * 2 && p.x == curr_figure->point(0).x && !hostile_present(p)) {
 			x = 0;
 			y = sz * 2;
+			ep.push_back({ p.x ,p.y });
+
 		}
 	}
 	Point target{ curr_figure->point(0).x + x,curr_figure->point(0).y + y };
@@ -225,7 +287,7 @@ void Chess_window::tile_pressed() {
 		}
 
 	}
-
+	check_ep();
 	refresh_figures();
 	Fl::redraw();
 	cout << "p: " << p.x << " " << p.y << endl;
