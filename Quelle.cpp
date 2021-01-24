@@ -1,11 +1,9 @@
 #include"Chess_figures.h"
+#undef vector
 
 constexpr int sz = 100;									//Kommt vielleicht später in die Fenster Klasse, wäre evt besser ein double um Schwulitäten zu vermeiden wenn sz nicht 100 ist
-
-
 constexpr int ls = 100;									//Abstand zum linken Fensterrand
-constexpr int us = 0;										//Abstand zum oberen Fensterrand
-
+constexpr int us = 0;									//Abstand zum oberen Fensterrand
 
 
 //Helfer Funktionen
@@ -13,7 +11,6 @@ Point get_point(int x, int y) {							//Ermittelt Koordinaten für Spielfeld
 	Point res{ x - x % sz,y - y % sz };
 	return res;
 }
-
 bool operator==(const Graph_lib::Color& a, const Graph_lib::Color& b) {				//Vergleicht Farben
 	if (a.as_int() == b.as_int())return true;
 	return false;
@@ -37,7 +34,7 @@ class Chess_window : public Window {
 	Vector_ref<Button>field_buttons;					//Für die Knöppe unter den schwarzen Feldern
 	Vector_ref< Graph_lib::Rectangle>tiles;				//Für die Felder
 	Vector_ref<Chess_figure>figures;
-	vector<Point>ep;
+	vector<Point>ep;									//Mögliche en passant Ziele
 public:
 	Chess_window(Point xy, int w, int h, const string& title);
 	void wait_for_button();
@@ -45,10 +42,10 @@ public:
 private:
 	bool tile_empty(Point&)const;
 	bool hostile_present(Point&);
-	bool is_ep(Point);
-	void check_ep();
+	bool is_ep(Point&);									//Prüft ob es sich bei der übergebenen Koordinate um eine en passanr Ziel handelt
+	void check_ep();									//Prüft und aktualisiert die Liste der möglichen en passant Ziele
 	Chess_figure* get_figure(Point&);
-	void reset_f_color();
+	void reset_f_color();								//Stellt die ursprüngliche Umrandungsfarbe wieder her
 	void refresh_figures();								//Ohne diese Funktion könne Figuren hinter den Felder verschwinden. Keine Ahnung warum.
 
 	void pawn_movement(Point&);
@@ -60,6 +57,7 @@ private:
 	void quit() { hide(); button_pushed = true; }
 	void tile_pressed();
 };
+
 Chess_window::Chess_window(Point xy, int w, int h, const string& title) :Window(w, h, title),
 button_pushed(false), figure_selected(false),
 quit_button(Point(x_max() - 70, 60), 70, 20, "Quit", cb_quit) {
@@ -115,7 +113,7 @@ bool Chess_window::hostile_present(Point& p) {
 	if (curr_figure->fill_color() == res->fill_color())return false;
 	return true;
 }
-bool Chess_window::is_ep(Point p) {
+bool Chess_window::is_ep(Point& p) {
 	for (int i = 0; i < ep.size(); i++)if (p == ep[i])return true;
 	return false;
 }
@@ -127,11 +125,9 @@ void Chess_window::check_ep() {
 		if (check == false)ep.erase(ep.begin() + i);
 	}
 }
-Chess_figure* Chess_window::get_figure(Point& p) {				//Ermittelt Figur
-
+Chess_figure* Chess_window::get_figure(Point& p) {
 	Chess_figure* res;
 	Point curr;
-
 	for (int i = 0; i < figures.size(); i++) {
 		curr = figures[i].point(0);
 		if (curr == Point{ p.x ,p.y }) {
@@ -152,7 +148,7 @@ void Chess_window::refresh_figures() {
 
 void Chess_window::pawn_movement(Point& p) {
 	Point start{ curr_figure->point(0) };
-
+	Point temp;
 	int x = 0;
 	int y = 0;
 	if (curr_figure->fill_color() == Color::white) {
@@ -161,10 +157,10 @@ void Chess_window::pawn_movement(Point& p) {
 			x = -sz;
 			y = -sz;
 		}
-		if (p.x == curr_figure->point(0).x - sz && is_ep({ start.x - sz,start.y })) {
+		temp = { start.x - sz, start.y };
+		if (p.x == curr_figure->point(0).x - sz && is_ep(temp)) {
 			x = -sz;
 			y = -sz;
-			Point temp{ start.x - sz, start.y };
 			for (int i = 0; i < figures.size(); i++) {
 				if (figures[i].point(0) == temp) {
 					detach(figures[i]);
@@ -176,10 +172,10 @@ void Chess_window::pawn_movement(Point& p) {
 			x = sz;
 			y = -sz;
 		}
-		if (p.x == curr_figure->point(0).x + sz && is_ep({ start.x + sz,start.y })) {
+		temp = { start.x + sz, start.y };
+		if (p.x == curr_figure->point(0).x + sz && is_ep(temp)) {
 			x = sz;
 			y = -sz;
-			Point temp{ start.x + sz, start.y };
 			for (int i = 0; i < figures.size(); i++) {
 				if (figures[i].point(0) == temp) {
 					detach(figures[i]);
@@ -198,15 +194,14 @@ void Chess_window::pawn_movement(Point& p) {
 		}
 	}
 	if (curr_figure->fill_color() == Color::black) {
-
 		if (p.x == curr_figure->point(0).x - sz && hostile_present(p)) {
 			x = -sz;
 			y = sz;
 		}
-		if (p.x == curr_figure->point(0).x - sz && is_ep({ start.x - sz,start.y })) {
+		temp = { start.x - sz, start.y };
+		if (p.x == curr_figure->point(0).x - sz && is_ep(temp)) {
 			x = -sz;
 			y = sz;
-			Point temp{ start.x - sz, start.y };
 			for (int i = 0; i < figures.size(); i++) {
 				if (figures[i].point(0) == temp) {
 					detach(figures[i]);
@@ -218,10 +213,10 @@ void Chess_window::pawn_movement(Point& p) {
 			x = sz;
 			y = sz;
 		}
-		if (p.x == curr_figure->point(0).x + sz && is_ep({ start.x + sz,start.y })) {
+		temp = { start.x + sz, start.y };
+		if (p.x == curr_figure->point(0).x + sz && is_ep(temp)) {
 			x = sz;
 			y = sz;
-			Point temp{ start.x + sz, start.y };
 			for (int i = 0; i < figures.size(); i++) {
 				if (figures[i].point(0) == temp) {
 					detach(figures[i]);
@@ -256,14 +251,13 @@ void Chess_window::pawn_movement(Point& p) {
 		else c_turn = Color::white;
 		figure_selected = false;
 	}
-
 }
 
 void Chess_window::tile_pressed() {
 
-	Point p = get_point(Fl::event_x(), Fl::event_y());				//p=Koordinaten des aktuell gedrücketen Feldes
+	Point p = get_point(Fl::event_x(), Fl::event_y());									//p=Koordinaten des aktuell gedrücketen Feldes
 
-	if (!tile_empty(p) && !figure_selected) {						//Spielstein auswählen
+	if (!tile_empty(p) && !figure_selected) {											//Spielstein auswählen
 		curr_figure = get_figure(p);
 		if (curr_figure->fill_color() == c_turn) {
 			curr_figure->set_color(Color::cyan);
@@ -287,10 +281,10 @@ void Chess_window::tile_pressed() {
 		}
 
 	}
-	check_ep();
-	refresh_figures();
+	check_ep();											//aktualisiert ep
+	refresh_figures();									//detached und attached alle Figuren nochmal, damit die nicht unter den Feldern verschwinden
 	Fl::redraw();
-	cout << "p: " << p.x << " " << p.y << endl;
+	cout << "p: " << p.x << " " << p.y << endl;			//Nur zum debuggen
 }
 
 
