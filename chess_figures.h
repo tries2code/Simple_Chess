@@ -4,8 +4,6 @@
 
 //Die Figurem sind nicht besonderes Hübsch, Malen war noch nie meine Stärke...
 
-extern int sz;
-extern int bd;
 
 //Unterscheidung der Figuren
 enum class F_kind {								//Art der Spielfigur
@@ -24,13 +22,15 @@ bool operator!=(F_kind a, F_kind b) {
 
 
 //Basis Klasse für den Vector_Ref
-struct chess_figure :Shape {
+struct Chess_figure :Shape {
 	int ssz = 0;
 	F_kind kind;
-};					
+	virtual F_kind what_kind() { return kind; }
+
+};
 
 //Bauer
-class Pawn :public chess_figure {
+class Pawn :public Chess_figure {
 	int ssz;
 	F_kind kind = F_kind::pawn;
 public:
@@ -40,6 +40,7 @@ private:
 	void draw_lines()const;
 };
 void Pawn::draw_lines()const {
+	int bd = ssz / 100;
 	if (color().visibility()) {
 
 		//Füllung
@@ -61,7 +62,7 @@ void Pawn::draw_lines()const {
 	}
 }
 //Pferd
-class Knight :public chess_figure {		//Springer/Pferd
+class Knight :public Chess_figure {		//Springer/Pferd
 	int ssz;
 	F_kind kind = F_kind::knight;
 public:
@@ -71,6 +72,7 @@ private:
 	void draw_lines()const;
 };
 void Knight::draw_lines()const {
+	int bd = ssz / 100;
 	if (color().visibility()) {
 		//Füllung
 		fl_color(fill_color().as_int());
@@ -107,7 +109,7 @@ void Knight::draw_lines()const {
 	}
 }
 //Turm
-class Rook :public chess_figure {		//Turm
+class Rook :public Chess_figure {		//Turm
 	int ssz;
 	F_kind kind = F_kind::rook;
 public:
@@ -117,6 +119,7 @@ private:
 	void draw_lines()const;
 };
 void Rook::draw_lines()const {
+	int bd = ssz / 100;
 	if (color().visibility()) {
 
 		//Füllung
@@ -170,7 +173,7 @@ void Rook::draw_lines()const {
 	}
 }
 //Läufer
-class Bishop :public chess_figure {		//Läufer
+class Bishop :public Chess_figure {		//Läufer
 	int ssz;
 	F_kind kind = F_kind::bishop;
 public:
@@ -180,6 +183,7 @@ private:
 	void draw_lines()const;
 };
 void Bishop::draw_lines()const {
+	int bd = ssz / 100;
 	if (color().visibility()) {
 
 		//Füllung
@@ -203,7 +207,7 @@ void Bishop::draw_lines()const {
 	}
 }
 
-class King :public chess_figure {
+class King :public Chess_figure {
 	int ssz;
 	F_kind kind = F_kind::king;
 public:
@@ -213,6 +217,7 @@ private:
 	void draw_lines()const;
 };
 void King::draw_lines()const {
+	int bd = ssz / 100;
 	if (color().visibility()) {
 		//Füllung
 		fl_color(fill_color().as_int());
@@ -298,7 +303,7 @@ void King::draw_lines()const {
 	}
 }
 
-class Queen :public chess_figure {
+class Queen :public Chess_figure {
 	int ssz;
 	F_kind kind = F_kind::queen;
 public:
@@ -308,30 +313,31 @@ private:
 	void draw_lines()const;
 };
 void Queen::draw_lines()const {
+	int bd = ssz / 100;
 	if (color().visibility()) {
 		//Füllung
 		fl_color(fill_color().as_int());
 		fl_begin_complex_polygon();
-		fl_vertex(point(0).x + sz / 16 * 3, point(0).y + ssz - bd);
-		fl_vertex(point(0).x + sz / 16 * 6, point(0).y + ssz / 16 * 7);
-		fl_vertex(point(0).x + sz / 16 * 4, point(0).y + ssz / 16 * 1);
-		fl_vertex(point(0).x + sz / 16 * 6, point(0).y + ssz / 16 * 4);
-		fl_vertex(point(0).x + sz / 16 * 8, point(0).y + bd);
-		fl_vertex(point(0).x + sz / 16 * 10, point(0).y + ssz / 16 * 4);
-		fl_vertex(point(0).x + sz / 16 * 12, point(0).y + ssz / 16 * 1);
-		fl_vertex(point(0).x + sz / 16 * 10, point(0).y + ssz / 16 * 7);
-		fl_vertex(point(0).x + sz / 16 * 13, point(0).y + ssz - bd);
+		fl_vertex(point(0).x + ssz / 16 * 3, point(0).y + ssz - bd);
+		fl_vertex(point(0).x + ssz / 16 * 6, point(0).y + ssz / 16 * 7);
+		fl_vertex(point(0).x + ssz / 16 * 4, point(0).y + ssz / 16 * 1);
+		fl_vertex(point(0).x + ssz / 16 * 6, point(0).y + ssz / 16 * 4);
+		fl_vertex(point(0).x + ssz / 16 * 8, point(0).y + bd);
+		fl_vertex(point(0).x + ssz / 16 * 10, point(0).y + ssz / 16 * 4);
+		fl_vertex(point(0).x + ssz / 16 * 12, point(0).y + ssz / 16 * 1);
+		fl_vertex(point(0).x + ssz / 16 * 10, point(0).y + ssz / 16 * 7);
+		fl_vertex(point(0).x + ssz / 16 * 13, point(0).y + ssz - bd);
 		fl_end_complex_polygon();
 		//Umrandung
 		fl_color(color().as_int());
-		fl_line(point(0).x + sz / 16 * 3, point(0).y + ssz - bd, point(0).x + sz / 16 * 6, point(0).y + ssz / 16 * 7);
-		fl_line(point(0).x + sz / 16 * 6, point(0).y + ssz / 16 * 7, point(0).x + sz / 16 * 4, point(0).y + ssz / 16 * 1);
-		fl_line(point(0).x + sz / 16 * 4, point(0).y + ssz / 16 * 1, point(0).x + sz / 16 * 6, point(0).y + ssz / 16 * 4);
-		fl_line(point(0).x + sz / 16 * 6, point(0).y + ssz / 16 * 4, point(0).x + sz / 16 * 8, point(0).y + bd);
-		fl_line(point(0).x + sz / 16 * 8, point(0).y + bd, point(0).x + sz / 16 * 10, point(0).y + ssz / 16 * 4);
-		fl_line(point(0).x + sz / 16 * 10, point(0).y + ssz / 16 * 4, point(0).x + sz / 16 * 12, point(0).y + ssz / 16 * 1);
-		fl_line(point(0).x + sz / 16 * 12, point(0).y + ssz / 16 * 1, point(0).x + sz / 16 * 10, point(0).y + ssz / 16 * 7);
-		fl_line(point(0).x + sz / 16 * 10, point(0).y + ssz / 16 * 7, point(0).x + sz / 16 * 13, point(0).y + ssz - bd);
-		fl_line(point(0).x + sz / 16 * 13, point(0).y + ssz - bd, point(0).x + sz / 16 * 3, point(0).y + ssz - bd);
+		fl_line(point(0).x + ssz / 16 * 3, point(0).y + ssz - bd, point(0).x + ssz / 16 * 6, point(0).y + ssz / 16 * 7);
+		fl_line(point(0).x + ssz / 16 * 6, point(0).y + ssz / 16 * 7, point(0).x + ssz / 16 * 4, point(0).y + ssz / 16 * 1);
+		fl_line(point(0).x + ssz / 16 * 4, point(0).y + ssz / 16 * 1, point(0).x + ssz / 16 * 6, point(0).y + ssz / 16 * 4);
+		fl_line(point(0).x + ssz / 16 * 6, point(0).y + ssz / 16 * 4, point(0).x + ssz / 16 * 8, point(0).y + bd);
+		fl_line(point(0).x + ssz / 16 * 8, point(0).y + bd, point(0).x + ssz / 16 * 10, point(0).y + ssz / 16 * 4);
+		fl_line(point(0).x + ssz / 16 * 10, point(0).y + ssz / 16 * 4, point(0).x + ssz / 16 * 12, point(0).y + ssz / 16 * 1);
+		fl_line(point(0).x + ssz / 16 * 12, point(0).y + ssz / 16 * 1, point(0).x + ssz / 16 * 10, point(0).y + ssz / 16 * 7);
+		fl_line(point(0).x + ssz / 16 * 10, point(0).y + ssz / 16 * 7, point(0).x + ssz / 16 * 13, point(0).y + ssz - bd);
+		fl_line(point(0).x + ssz / 16 * 13, point(0).y + ssz - bd, point(0).x + ssz / 16 * 3, point(0).y + ssz - bd);
 	}
 }
