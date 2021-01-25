@@ -253,6 +253,7 @@ void Chess_window::pawn_movement(Point& p) {
 		if (c_turn == Color::white)c_turn = Color::black;
 		else c_turn = Color::white;
 		figure_selected = false;
+		curr_figure = nullptr;
 	}
 }
 void Chess_window::rook_movement(Point& p) {
@@ -288,6 +289,7 @@ void Chess_window::rook_movement(Point& p) {
 		if (c_turn == Color::white)c_turn = Color::black;
 		else c_turn = Color::white;
 		figure_selected = false;
+		curr_figure = nullptr;
 	}
 }
 void Chess_window::knight_movement(Point& p) {
@@ -301,7 +303,6 @@ void Chess_window::knight_movement(Point& p) {
 		temp.x += sz;
 		temp.y -= (sz * 2);
 	}
-
 	if (p.x == start.x + sz * 2 && p.y == start.y - sz) {									//2 rechts, 1 hoch
 		temp.x += (sz * 2);
 		temp.y -= sz;
@@ -326,7 +327,6 @@ void Chess_window::knight_movement(Point& p) {
 		temp.x -= (sz * 2);
 		temp.y -= sz;
 	}
-
 	if (hostile_present(temp)) {
 		for (int i = 0; i < figures.size(); i++) {
 			if (figures[i].point(0) == temp) {
@@ -341,8 +341,8 @@ void Chess_window::knight_movement(Point& p) {
 		if (c_turn == Color::white)c_turn = Color::black;
 		else c_turn = Color::white;
 		figure_selected = false;
+		curr_figure = nullptr;
 	}
-
 }
 void Chess_window::bishop_movement(Point& p) {
 	Point start{ curr_figure->point(0) };
@@ -389,6 +389,7 @@ void Chess_window::bishop_movement(Point& p) {
 		if (c_turn == Color::white)c_turn = Color::black;
 		else c_turn = Color::white;
 		figure_selected = false;
+		curr_figure = nullptr;
 	}
 }
 void Chess_window::queen_movement(Point& p) {
@@ -440,6 +441,7 @@ void Chess_window::queen_movement(Point& p) {
 		if (c_turn == Color::white)c_turn = Color::black;
 		else c_turn = Color::white;
 		figure_selected = false;
+		curr_figure = nullptr;
 	}
 }
 
@@ -464,7 +466,7 @@ void Chess_window::tile_pressed() {
 			if (curr_figure->fill_color() == c_turn) curr_figure->set_color(Color::cyan);
 		}
 	}
-	if (tile_empty(p) || hostile_present(p) && figure_selected) {
+	if (curr_figure && tile_empty(p) || hostile_present(p) && figure_selected) {
 		F_kind c_kind = curr_figure->what_kind();
 
 		switch (c_kind) {
