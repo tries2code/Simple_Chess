@@ -153,12 +153,12 @@ void Chess_window::pawn_movement(Point& p) {
 	int y = 0;
 	if (curr_figure->fill_color() == Color::white) {
 
-		if (p.x == curr_figure->point(0).x - sz && hostile_present(p)) {
+		if (p.x == curr_figure->point(0).x - sz && p.y == curr_figure->point(0).y - sz && hostile_present(p)) {
 			x = -sz;
 			y = -sz;
 		}
 		temp = { start.x - sz, start.y };
-		if (p.x == curr_figure->point(0).x - sz && is_ep(temp)) {
+		if (p.x == curr_figure->point(0).x - sz && p.y == curr_figure->point(0).y - sz && is_ep(temp)) {
 			x = -sz;
 			y = -sz;
 			for (int i = 0; i < figures.size(); i++) {
@@ -168,12 +168,12 @@ void Chess_window::pawn_movement(Point& p) {
 				}
 			}
 		}
-		if (p.x == curr_figure->point(0).x + sz && hostile_present(p)) {
+		if (p.x == curr_figure->point(0).x + sz && p.y == curr_figure->point(0).y - sz && hostile_present(p)) {
 			x = sz;
 			y = -sz;
 		}
 		temp = { start.x + sz, start.y };
-		if (p.x == curr_figure->point(0).x + sz && is_ep(temp)) {
+		if (p.x == curr_figure->point(0).x + sz && p.y == curr_figure->point(0).y - sz && is_ep(temp)) {
 			x = sz;
 			y = -sz;
 			for (int i = 0; i < figures.size(); i++) {
@@ -194,12 +194,12 @@ void Chess_window::pawn_movement(Point& p) {
 		}
 	}
 	if (curr_figure->fill_color() == Color::black) {
-		if (p.x == curr_figure->point(0).x - sz && hostile_present(p)) {
+		if (p.x == curr_figure->point(0).x - sz && p.y == curr_figure->point(0).y + sz && hostile_present(p)) {
 			x = -sz;
 			y = sz;
 		}
 		temp = { start.x - sz, start.y };
-		if (p.x == curr_figure->point(0).x - sz && is_ep(temp)) {
+		if (p.x == curr_figure->point(0).x - sz && p.y == curr_figure->point(0).y + sz && is_ep(temp)) {
 			x = -sz;
 			y = sz;
 			for (int i = 0; i < figures.size(); i++) {
@@ -209,12 +209,12 @@ void Chess_window::pawn_movement(Point& p) {
 				}
 			}
 		}
-		if (p.x == curr_figure->point(0).x + sz && hostile_present(p)) {
+		if (p.x == curr_figure->point(0).x + sz && p.y == curr_figure->point(0).y + sz && hostile_present(p)) {
 			x = sz;
 			y = sz;
 		}
 		temp = { start.x + sz, start.y };
-		if (p.x == curr_figure->point(0).x + sz && is_ep(temp)) {
+		if (p.x == curr_figure->point(0).x + sz && p.y == curr_figure->point(0).y + sz && is_ep(temp)) {
 			x = sz;
 			y = sz;
 			for (int i = 0; i < figures.size(); i++) {
