@@ -49,7 +49,10 @@ private:
 	void refresh_figures();								//Ohne diese Funktion könne Figuren hinter den Felder verschwinden. Keine Ahnung warum.
 
 	void pawn_movement(Point&);
-
+	void rook_movement(Point&);
+	void knight_movement(Point&);
+	void bishop_movement(Point&);
+	void queen_movement(Point&);
 
 	static void cb_quit(Address, Address addr) { reference_to<Chess_window>(addr).quit(); }		//Ist die Stroustrup Variante, macht auch nur 		return *static_cast<W*>(pw);
 	static void cb_tile_pressed(Address, Address addr) { reference_to<Chess_window>(addr).tile_pressed(); }
@@ -110,7 +113,7 @@ bool Chess_window::hostile_present(Point& p) {
 	Chess_figure* res;
 	if (!tile_empty(p))res = get_figure(p);
 	else return false;
-	if (curr_figure->fill_color() == res->fill_color())return false;
+	if (figure_selected && curr_figure->fill_color() == res->fill_color())return false;
 	return true;
 }
 bool Chess_window::is_ep(Point& p) {
@@ -252,16 +255,206 @@ void Chess_window::pawn_movement(Point& p) {
 		figure_selected = false;
 	}
 }
+void Chess_window::rook_movement(Point& p) {
+	Point start{ curr_figure->point(0) };
+	Point temp{ curr_figure->point(0) };
+	int x = 0;
+	int y = 0;
+	if (p.x == start.x && p.y < start.y)y = -sz;		//nach oben
+	if (p.x == start.x && p.y > start.y) y = sz;		//nach unten
+	if (p.x > start.x && p.y == start.y)x = sz;			//nach rechts
+	if (p.x < start.x && p.y == start.y)x = -sz;		//nach links
+	while (temp != p) {
+		temp.x += x;
+		temp.y += y;
+		if (!tile_empty(temp) && temp != p) {
+			temp = start;
+			x = 0;
+			y = 0;
+			break;
+		}
+	}
+	if (hostile_present(temp)) {
+		for (int i = 0; i < figures.size(); i++) {
+			if (figures[i].point(0) == temp) {
+				detach(figures[i]);
+				figures.erase(i);
+			}
+		}
+	}
+	curr_figure->move(temp.x - start.x, temp.y - start.y);
+	if (start != curr_figure->point(0)) {
+		reset_f_color();
+		if (c_turn == Color::white)c_turn = Color::black;
+		else c_turn = Color::white;
+		figure_selected = false;
+	}
+}
+void Chess_window::knight_movement(Point& p) {
+	Point start{ curr_figure->point(0) };
+	Point temp{ curr_figure->point(0) };
+	if (p.x == start.x - sz && p.y == start.y - (sz * 2)) {								//2 hoch, 1 links
+		temp.x -= sz;
+		temp.y -= (sz * 2);
+	}
+	if (p.x == start.x + sz && p.y == start.y - (sz * 2)) {								//2 hoch, 1 rechts
+		temp.x += sz;
+		temp.y -= (sz * 2);
+	}
+
+	if (p.x == start.x + sz * 2 && p.y == start.y - sz) {									//2 rechts, 1 hoch
+		temp.x += (sz * 2);
+		temp.y -= sz;
+	}
+	if (p.x == start.x + sz * 2 && p.y == start.y + sz) {								//2 rechts, 1 runter
+		temp.x += (sz * 2);
+		temp.y += sz;
+	}
+	if (p.x == start.x + sz && p.y == start.y + sz * 2) {									//2 runter, 1 rechts
+		temp.x += sz;
+		temp.y += (sz * 2);
+	}
+	if (p.x == start.x - sz && p.y == start.y + sz * 2) {							//2 runter, 1 links
+		temp.x -= sz;
+		temp.y += (sz * 2);
+	}
+	if (p.x == start.x - (sz * 2) && p.y == start.y + sz) {							//2 links, 1 runter
+		temp.x -= (sz * 2);
+		temp.y += sz;
+	}
+	if (p.x == start.x - (sz * 2) && p.y == start.y - sz) {						//2 links, 1 hoch
+		temp.x -= (sz * 2);
+		temp.y -= sz;
+	}
+
+	if (hostile_present(temp)) {
+		for (int i = 0; i < figures.size(); i++) {
+			if (figures[i].point(0) == temp) {
+				detach(figures[i]);
+				figures.erase(i);
+			}
+		}
+	}
+	curr_figure->move(temp.x - start.x, temp.y - start.y);
+	if (start != curr_figure->point(0)) {
+		reset_f_color();
+		if (c_turn == Color::white)c_turn = Color::black;
+		else c_turn = Color::white;
+		figure_selected = false;
+	}
+
+}
+void Chess_window::bishop_movement(Point& p) {
+	Point start{ curr_figure->point(0) };
+	Point temp{ curr_figure->point(0) };
+	int x = 0;
+	int y = 0;
+	if (p.x > start.x && p.y < start.y) {			//nach oben rechts
+		x = sz;
+		y = -sz;
+	}
+	if (p.x < start.x && p.y > start.y) {			//nach unten links
+		x = -sz;
+		y = sz;
+	}
+	if (p.x > start.x && p.y > start.y) {			//nach unten rechts
+		x = sz;
+		y = sz;
+	}
+	if (p.x < start.x && p.y < start.y) {		//nach oben links
+		x = -sz;
+		y = -sz;
+	}
+	while (temp != p) {
+		temp.x += x;
+		temp.y += y;
+		if (!tile_empty(temp) && temp != p) {
+			temp = start;
+			x = 0;
+			y = 0;
+			break;
+		}
+	}
+	if (hostile_present(temp)) {
+		for (int i = 0; i < figures.size(); i++) {
+			if (figures[i].point(0) == temp) {
+				detach(figures[i]);
+				figures.erase(i);
+			}
+		}
+	}
+	curr_figure->move(temp.x - start.x, temp.y - start.y);
+	if (start != curr_figure->point(0)) {
+		reset_f_color();
+		if (c_turn == Color::white)c_turn = Color::black;
+		else c_turn = Color::white;
+		figure_selected = false;
+	}
+}
+void Chess_window::queen_movement(Point& p) {
+	Point start{ curr_figure->point(0) };
+	Point temp{ curr_figure->point(0) };
+	int x = 0;
+	int y = 0;
+	if (p.x == start.x && p.y < start.y)y = -sz;		//nach oben
+	if (p.x == start.x && p.y > start.y) y = sz;		//nach unten
+	if (p.x > start.x && p.y == start.y)x = sz;			//nach rechts
+	if (p.x < start.x && p.y == start.y)x = -sz;		//nach links
+	if (p.x > start.x && p.y < start.y) {			//nach oben rechts
+		x = sz;
+		y = -sz;
+	}
+	if (p.x < start.x && p.y > start.y) {			//nach unten links
+		x = -sz;
+		y = sz;
+	}
+	if (p.x > start.x && p.y > start.y) {			//nach unten rechts
+		x = sz;
+		y = sz;
+	}
+	if (p.x < start.x && p.y < start.y) {		//nach oben links
+		x = -sz;
+		y = -sz;
+	}
+	while (temp != p) {
+		temp.x += x;
+		temp.y += y;
+		if (!tile_empty(temp) && temp != p) {
+			temp = start;
+			x = 0;
+			y = 0;
+			break;
+		}
+	}
+	if (hostile_present(temp)) {
+		for (int i = 0; i < figures.size(); i++) {
+			if (figures[i].point(0) == temp) {
+				detach(figures[i]);
+				figures.erase(i);
+			}
+		}
+	}
+	curr_figure->move(temp.x - start.x, temp.y - start.y);
+	if (start != curr_figure->point(0)) {
+		reset_f_color();
+		if (c_turn == Color::white)c_turn = Color::black;
+		else c_turn = Color::white;
+		figure_selected = false;
+	}
+}
 
 void Chess_window::tile_pressed() {
 
 	Point p = get_point(Fl::event_x(), Fl::event_y());									//p=Koordinaten des aktuell gedrücketen Feldes
 
-	if (!tile_empty(p) && !figure_selected) {											//Spielstein auswählen
-		curr_figure = get_figure(p);
-		if (curr_figure->fill_color() == c_turn) {
-			curr_figure->set_color(Color::cyan);
-			figure_selected = true;
+	if (!tile_empty(p) && !figure_selected) {	//Spielstein auswählen
+		Chess_figure* temp = get_figure(p);
+		if (temp->fill_color() == c_turn) {
+			curr_figure = get_figure(p);
+			if (curr_figure->fill_color() == c_turn) {
+				curr_figure->set_color(Color::cyan);
+				figure_selected = true;
+			}
 		}
 	}
 	else {
@@ -277,6 +470,18 @@ void Chess_window::tile_pressed() {
 		switch (c_kind) {
 		case F_kind::pawn:
 			pawn_movement(p);
+			break;
+		case F_kind::rook:
+			rook_movement(p);
+			break;
+		case F_kind::knight:
+			knight_movement(p);
+			break;
+		case F_kind::bishop:
+			bishop_movement(p);
+			break;
+		case F_kind::queen:
+			queen_movement(p);
 			break;
 		}
 
