@@ -136,7 +136,7 @@ void Chess_window::wait_for_button() {
 
 bool Chess_window::tile_empty(Point& p)const {
 	Point curr{ p.x ,p.y };
-	if (p.x < ls || p.x > ls + 7 * sz || p.y < us || p.y > us + 7 * sz)return false;
+	if (p.x < ls || p.x >= ls + 8 * sz || p.y < us || p.y >= us + 8 * sz)return false;
 	for (int i = 0; i < figures.size(); i++) {
 		if (figures[i].point(0) == curr)return false;
 	}
@@ -144,7 +144,7 @@ bool Chess_window::tile_empty(Point& p)const {
 }
 bool Chess_window::hostile_present(Point& p) {
 	Chess_figure* res;
-	if (p.x < ls || p.x > ls + 7 * sz || p.y < us || p.y > us + 7 * sz)return false;
+	if (p.x < ls || p.x >= ls + 8 * sz || p.y < us || p.y >= us + 8 * sz)return false;
 	if (!tile_empty(p))res = get_figure(p);
 	else return false;
 	if (figure_selected && curr_figure->fill_color() == res->fill_color())return false;
