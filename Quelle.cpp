@@ -35,8 +35,11 @@ class Chess_window : public Window {
 	bool black_r_rook = true;
 
 	Chess_figure* curr_figure = nullptr;
+	Chess_figure* black_king_ptr = nullptr;
+	Chess_figure* white_king_ptr = nullptr;
 	Color c_turn = Color::white;
 
+	Button restart_button;
 	Button quit_button;
 
 	Vector_ref<Button>field_buttons;					//Für die Knöppe unter den schwarzen Feldern
@@ -59,6 +62,7 @@ private:
 	void refresh_figures();								//Ohne diese Funktion könne Figuren hinter den Felder verschwinden. Keine Ahnung warum.
 	bool castling(Point&);
 	bool tile_in_check(Point&);
+	bool king_in_check();
 
 	void pawn_movement(Point&);
 	void rook_movement(Point&);
@@ -67,16 +71,19 @@ private:
 	void queen_movement(Point&);
 	void king_movement(Point& p);
 
+	static void cb_restart(Address, Address addr) { static_cast<Chess_window*>(addr)->restart_game(); }
 	static void cb_quit(Address, Address addr) { reference_to<Chess_window>(addr).quit(); }		//Ist die Stroustrup Variante, macht auch nur 		return *static_cast<W*>(pw);
 	static void cb_tile_pressed(Address, Address addr) { reference_to<Chess_window>(addr).tile_pressed(); }
 
+	void restart_game();
 	void quit() { hide(); button_pushed = true; }
 	void tile_pressed();
 };
 
 Chess_window::Chess_window(Point xy, int w, int h, const string& title) :Window(w, h, title),
 button_pushed(false), figure_selected(false),
-quit_button(Point(x_max() - 70, 60), 70, 20, "Quit", cb_quit) {
+restart_button(Point(x_max() - 70, 0), 70, 20, "Restart", cb_restart),
+quit_button(Point(x_max() - 70, 30), 70, 20, "Quit", cb_quit) {
 
 	for (int x = 0; x < 8; x++) {
 		for (int y = 0; y < 8; y++) {
@@ -110,8 +117,13 @@ quit_button(Point(x_max() - 70, 60), 70, 20, "Quit", cb_quit) {
 			if (figures[figures.size() - 1].fill_color() == Color::white && figures[figures.size() - 1].what_kind() == F_kind::rook)white_castling.push_back(figures[figures.size() - 1].point(0));
 			if (figures[figures.size() - 1].fill_color() == Color::white && figures[figures.size() - 1].what_kind() == F_kind::king)white_castling.push_back(figures[figures.size() - 1].point(0));
 
+			//King Pointer
+			if (figures[figures.size() - 1].fill_color() == Color::black && figures[figures.size() - 1].what_kind() == F_kind::king)black_king_ptr = &figures[figures.size() - 1];
+			if (figures[figures.size() - 1].fill_color() == Color::white && figures[figures.size() - 1].what_kind() == F_kind::king)white_king_ptr = &figures[figures.size() - 1];
+
 		}
 	}
+	attach(restart_button);
 	attach(quit_button);
 	size_range(w, h, w, h);	//Fixiert Fenster
 }
@@ -418,6 +430,13 @@ bool Chess_window::tile_in_check(Point& p) {
 	}
 	return false;
 }
+bool Chess_window::king_in_check() {
+	Chess_figure* temp_ptr = nullptr;
+	c_turn == Color::black ? temp_ptr = black_king_ptr : temp_ptr = white_king_ptr;
+	Point temp{ temp_ptr->point(0) };
+	if (tile_in_check(temp))return true;
+	return false;
+}
 
 void Chess_window::pawn_movement(Point& p) {
 	Point start{ curr_figure->point(0) };
@@ -518,6 +537,7 @@ void Chess_window::pawn_movement(Point& p) {
 		}
 	}
 	curr_figure->move(x, y);
+	if (king_in_check())curr_figure->move(-(x), -(y));
 	if (start != curr_figure->point(0)) {
 		reset_f_color();
 		if (c_turn == Color::white)c_turn = Color::black;
@@ -558,6 +578,7 @@ void Chess_window::rook_movement(Point& p) {
 		}
 	}
 	curr_figure->move(temp.x - start.x, temp.y - start.y);
+	if (king_in_check())curr_figure->move(start.x - temp.x, start.y - temp.y);
 	if (start != curr_figure->point(0)) {
 		if (start == upper_left)black_l_rook = false;
 		if (start == upper_right)black_r_rook = false;
@@ -614,6 +635,7 @@ void Chess_window::knight_movement(Point& p) {
 		}
 	}
 	curr_figure->move(temp.x - start.x, temp.y - start.y);
+	if (king_in_check())curr_figure->move(start.x - temp.x, start.y - temp.y);
 	if (start != curr_figure->point(0)) {
 		reset_f_color();
 		if (c_turn == Color::white)c_turn = Color::black;
@@ -663,6 +685,7 @@ void Chess_window::bishop_movement(Point& p) {
 		}
 	}
 	curr_figure->move(temp.x - start.x, temp.y - start.y);
+	if (king_in_check())curr_figure->move(start.x - temp.x, start.y - temp.y);
 	if (start != curr_figure->point(0)) {
 		reset_f_color();
 		if (c_turn == Color::white)c_turn = Color::black;
@@ -715,6 +738,7 @@ void Chess_window::queen_movement(Point& p) {
 		}
 	}
 	curr_figure->move(temp.x - start.x, temp.y - start.y);
+	if (king_in_check())curr_figure->move(start.x - temp.x, start.y - temp.y);
 	if (start != curr_figure->point(0)) {
 		reset_f_color();
 		if (c_turn == Color::white)c_turn = Color::black;
@@ -795,6 +819,58 @@ void Chess_window::king_movement(Point& p) {
 	}
 }
 
+void Chess_window::restart_game() {
+	figure_selected = false;
+
+	white_l_rook = true;
+	white_king = true;
+	white_r_rook = true;
+
+	black_l_rook = true;
+	black_king = true;
+	black_r_rook = true;
+
+	curr_figure = nullptr;
+	black_king_ptr = nullptr;
+	white_king_ptr = nullptr;
+	c_turn = Color::white;
+
+	for (int i = 0; i < figures.size(); i++) {
+		detach(figures[i]);
+	}
+	figures.clear();
+	ep.clear();
+	white_castling.clear();
+	black_castling.clear();
+	for (int x = 0; x < 8; x++) {
+		for (int y = 0; y < 8; y++) {
+
+			//Figuren
+			if ((y == 0 || y == 7) && (x == 0 || x == 7))figures.push_back(new Rook{ {ls + x * sz ,us + y * sz },sz });
+			if ((y == 0 || y == 7) && (x == 1 || x == 6))figures.push_back(new Knight{ {ls + x * sz ,us + y * sz },sz });
+			if ((y == 0 || y == 7) && (x == 2 || x == 5))figures.push_back(new Bishop{ {ls + x * sz ,us + y * sz },sz });
+			if ((y == 0 || y == 7) && (x == 3))figures.push_back(new Queen{ {ls + x * sz ,us + y * sz },sz });
+			if ((y == 0 || y == 7) && (x == 4))figures.push_back(new King{ {ls + x * sz ,us + y * sz },sz });
+			if (y == 1 || y == 6)figures.push_back(new Pawn{ {ls + x * sz ,us + y * sz },sz });
+			attach(figures[figures.size() - 1]);
+
+			if (y == 0 || y == 1) { figures[figures.size() - 1].set_color(Color::white); figures[figures.size() - 1].set_fill_color(Color::black); }
+			if (y == 6 || y == 7)figures[figures.size() - 1].set_fill_color(Color::white);
+
+			//Rochade Buffer
+			if (figures[figures.size() - 1].fill_color() == Color::black && figures[figures.size() - 1].what_kind() == F_kind::rook)black_castling.push_back(figures[figures.size() - 1].point(0));
+			if (figures[figures.size() - 1].fill_color() == Color::black && figures[figures.size() - 1].what_kind() == F_kind::king)black_castling.push_back(figures[figures.size() - 1].point(0));
+			if (figures[figures.size() - 1].fill_color() == Color::white && figures[figures.size() - 1].what_kind() == F_kind::rook)white_castling.push_back(figures[figures.size() - 1].point(0));
+			if (figures[figures.size() - 1].fill_color() == Color::white && figures[figures.size() - 1].what_kind() == F_kind::king)white_castling.push_back(figures[figures.size() - 1].point(0));
+
+			//King Pointer
+			if (figures[figures.size() - 1].fill_color() == Color::black && figures[figures.size() - 1].what_kind() == F_kind::king)black_king_ptr = &figures[figures.size() - 1];
+			if (figures[figures.size() - 1].fill_color() == Color::white && figures[figures.size() - 1].what_kind() == F_kind::king)white_king_ptr = &figures[figures.size() - 1];
+
+		}
+	}
+Fl:redraw();
+}
 void Chess_window::tile_pressed() {
 	Chess_figure* temp_figure = nullptr;
 	Point p = get_point(Fl::event_x(), Fl::event_y());									//p=Koordinaten des aktuell gedrücketen Feldes
