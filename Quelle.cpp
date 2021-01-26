@@ -345,7 +345,7 @@ bool Chess_window::tile_in_check(Point& p) {
 			if (hostile->what_kind() == F_kind::queen)return true;
 			break;
 		}
-		if (!tile_empty(temp))break;
+		if (!tile_empty(temp)&&!(curr_figure->point(0)==temp))break;
 	}
 	temp = p;
 	while (temp.x >= ls) {
@@ -356,7 +356,7 @@ bool Chess_window::tile_in_check(Point& p) {
 			if (hostile->what_kind() == F_kind::queen)return true;
 			break;
 		}
-		if (!tile_empty(temp))break;
+		if (!tile_empty(temp) && !(curr_figure->point(0) == temp))break;
 	}
 	temp = p;
 	while (temp.y <= us + 7 * sz) {
@@ -367,7 +367,7 @@ bool Chess_window::tile_in_check(Point& p) {
 			if (hostile->what_kind() == F_kind::queen)return true;
 			break;
 		}
-		if (!tile_empty(temp))break;
+		if (!tile_empty(temp) && !(curr_figure->point(0) == temp))break;
 	}
 	temp = p;
 	while (temp.y >= us) {
@@ -378,7 +378,7 @@ bool Chess_window::tile_in_check(Point& p) {
 			if (hostile->what_kind() == F_kind::queen)return true;
 			break;
 		}
-		if (!tile_empty(temp))break;
+		if (!tile_empty(temp) && !(curr_figure->point(0) == temp))break;
 	}
 	//Prüfung Läufer oder Dame
 	temp = p;
@@ -391,7 +391,7 @@ bool Chess_window::tile_in_check(Point& p) {
 			if (hostile->what_kind() == F_kind::queen)return true;
 			break;
 		}
-		if (!tile_empty(temp))break;
+		if (!tile_empty(temp) && !(curr_figure->point(0) == temp))break;
 	}
 	temp = p;
 	while (temp.x <= ls + 7 * sz && temp.y >= us) {
@@ -403,7 +403,7 @@ bool Chess_window::tile_in_check(Point& p) {
 			if (hostile->what_kind() == F_kind::queen)return true;
 			break;
 		}
-		if (!tile_empty(temp))break;
+		if (!tile_empty(temp) && !(curr_figure->point(0) == temp))break;
 	}
 	temp = p;
 	while (temp.x >= ls && temp.y <= us + 7 * sz) {
@@ -415,7 +415,7 @@ bool Chess_window::tile_in_check(Point& p) {
 			if (hostile->what_kind() == F_kind::queen)return true;
 			break;
 		}
-		if (!tile_empty(temp))break;
+		if (!tile_empty(temp) && !(curr_figure->point(0) == temp))break;
 	}
 	temp = p;
 	while (temp.x >= ls && temp.y >= us) {
@@ -427,7 +427,7 @@ bool Chess_window::tile_in_check(Point& p) {
 			if (hostile->what_kind() == F_kind::queen)return true;
 			break;
 		}
-		if (!tile_empty(temp))break;
+		if (!tile_empty(temp) && !(curr_figure->point(0) == temp))break;
 	}
 	return false;
 }
