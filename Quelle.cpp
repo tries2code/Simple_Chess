@@ -136,7 +136,7 @@ void Chess_window::wait_for_button() {
 
 bool Chess_window::tile_empty(Point& p)const {
 	Point curr{ p.x ,p.y };
-	if (p.x < ls || p.x >= ls + 8 * sz || p.y < us || p.y >= us + 8 * sz)return false;
+	if (p.x < ls || p.x > ls + 7 * sz || p.y < us || p.y > us + 7 * sz)return false;
 	for (int i = 0; i < figures.size(); i++) {
 		if (figures[i].point(0) == curr)return false;
 	}
@@ -144,7 +144,7 @@ bool Chess_window::tile_empty(Point& p)const {
 }
 bool Chess_window::hostile_present(Point& p) {
 	Chess_figure* res;
-	if (p.x < ls || p.x >= ls + 8 * sz || p.y < us || p.y >= us + 8 * sz)return false;
+	if (p.x < ls || p.x > ls + 7 * sz || p.y < us || p.y > us + 7 * sz)return false;
 	if (!tile_empty(p))res = get_figure(p);
 	else return false;
 	if (figure_selected && curr_figure->fill_color() == res->fill_color())return false;
@@ -345,7 +345,7 @@ bool Chess_window::tile_in_check(Point& p) {
 			if (hostile->what_kind() == F_kind::queen)return true;
 			break;
 		}
-		if (!tile_empty(temp)&&!(curr_figure->point(0)==temp))break;
+		if (!tile_empty(temp) && !(curr_figure->point(0) == temp))break;
 	}
 	temp = p;
 	while (temp.x >= ls) {
@@ -465,6 +465,7 @@ void Chess_window::pawn_promotion() {
 void Chess_window::pawn_movement(Point& p) {
 	Point start{ curr_figure->point(0) };
 	Point temp;
+	Chess_figure* temp_target = nullptr;
 	int x = 0;
 	int y = 0;
 	if (curr_figure->fill_color() == Color::white) {
@@ -552,17 +553,18 @@ void Chess_window::pawn_movement(Point& p) {
 		}
 	}
 	Point target{ curr_figure->point(0).x + x,curr_figure->point(0).y + y };
-	if (hostile_present(target)) {
-		for (int i = 0; i < figures.size(); i++) {
-			if (figures[i].point(0) == target) {
-				detach(figures[i]);
-				figures.erase(i);
-			}
-		}
-	}
+	if (hostile_present(target))temp_target = get_figure(target);
 	curr_figure->move(x, y);
 	if (king_in_check())curr_figure->move(-(x), -(y));
 	if (start != curr_figure->point(0)) {
+		if (temp_target) {
+			for (int i = 0; i < figures.size(); i++) {
+				if (&figures[i] == temp_target) {
+					detach(figures[i]);
+					figures.erase(i);
+				}
+			}
+		}
 		reset_f_color();
 		if (c_turn == Color::white)c_turn = Color::black;
 		else c_turn = Color::white;
@@ -577,6 +579,7 @@ void Chess_window::rook_movement(Point& p) {
 	Point lower_right{ ls + 7 * sz,us + 7 * sz };
 	Point start{ curr_figure->point(0) };
 	Point temp{ curr_figure->point(0) };
+	Chess_figure* temp_target = nullptr;
 	int x = 0;
 	int y = 0;
 	if (p.x == start.x && p.y < start.y)y = -sz;		//nach oben
@@ -593,14 +596,7 @@ void Chess_window::rook_movement(Point& p) {
 			break;
 		}
 	}
-	if (hostile_present(temp)) {
-		for (int i = 0; i < figures.size(); i++) {
-			if (figures[i].point(0) == temp) {
-				detach(figures[i]);
-				figures.erase(i);
-			}
-		}
-	}
+	if (hostile_present(temp))temp_target = get_figure(temp);
 	curr_figure->move(temp.x - start.x, temp.y - start.y);
 	if (king_in_check())curr_figure->move(start.x - temp.x, start.y - temp.y);
 	if (start != curr_figure->point(0)) {
@@ -608,6 +604,14 @@ void Chess_window::rook_movement(Point& p) {
 		if (start == upper_right)black_r_rook = false;
 		if (start == lower_left)white_l_rook = false;
 		if (start == lower_right)white_r_rook = false;
+		if (temp_target) {
+			for (int i = 0; i < figures.size(); i++) {
+				if (&figures[i] == temp_target) {
+					detach(figures[i]);
+					figures.erase(i);
+				}
+			}
+		}
 		reset_f_color();
 		if (c_turn == Color::white)c_turn = Color::black;
 		else c_turn = Color::white;
@@ -618,6 +622,7 @@ void Chess_window::rook_movement(Point& p) {
 void Chess_window::knight_movement(Point& p) {
 	Point start{ curr_figure->point(0) };
 	Point temp{ curr_figure->point(0) };
+	Chess_figure* temp_target = nullptr;
 	if (p.x == start.x - sz && p.y == start.y - (sz * 2)) {								//2 hoch, 1 links
 		temp.x -= sz;
 		temp.y -= (sz * 2);
@@ -650,28 +655,29 @@ void Chess_window::knight_movement(Point& p) {
 		temp.x -= (sz * 2);
 		temp.y -= sz;
 	}
-	if (hostile_present(temp)) {
-		for (int i = 0; i < figures.size(); i++) {
-			if (figures[i].point(0) == temp) {
-				detach(figures[i]);
-				figures.erase(i);
-			}
-		}
-	}
+	if (hostile_present(temp)) temp_target = get_figure(temp);
 	curr_figure->move(temp.x - start.x, temp.y - start.y);
 	if (king_in_check())curr_figure->move(start.x - temp.x, start.y - temp.y);
 	if (start != curr_figure->point(0)) {
+		if (temp_target) {
+			for (int i = 0; i < figures.size(); i++) {
+				if (&figures[i] == temp_target) {
+					detach(figures[i]);
+					figures.erase(i);
+				}
+			}
+		}
 		reset_f_color();
 		if (c_turn == Color::white)c_turn = Color::black;
 		else c_turn = Color::white;
 		figure_selected = false;
 		curr_figure = nullptr;
 	}
-
 }
 void Chess_window::bishop_movement(Point& p) {
 	Point start{ curr_figure->point(0) };
 	Point temp{ curr_figure->point(0) };
+	Chess_figure* temp_target = nullptr;
 	int x = 0;
 	int y = 0;
 	if (p.x > start.x && p.y < start.y) {			//nach oben rechts
@@ -700,17 +706,19 @@ void Chess_window::bishop_movement(Point& p) {
 			break;
 		}
 	}
-	if (hostile_present(temp)) {
-		for (int i = 0; i < figures.size(); i++) {
-			if (figures[i].point(0) == temp) {
-				detach(figures[i]);
-				figures.erase(i);
-			}
-		}
-	}
+	if (hostile_present(temp))temp_target = get_figure(temp);
+
 	curr_figure->move(temp.x - start.x, temp.y - start.y);
 	if (king_in_check())curr_figure->move(start.x - temp.x, start.y - temp.y);
 	if (start != curr_figure->point(0)) {
+		if (temp_target) {
+			for (int i = 0; i < figures.size(); i++) {
+				if (&figures[i] == temp_target) {
+					detach(figures[i]);
+					figures.erase(i);
+				}
+			}
+		}
 		reset_f_color();
 		if (c_turn == Color::white)c_turn = Color::black;
 		else c_turn = Color::white;
@@ -721,6 +729,7 @@ void Chess_window::bishop_movement(Point& p) {
 void Chess_window::queen_movement(Point& p) {
 	Point start{ curr_figure->point(0) };
 	Point temp{ curr_figure->point(0) };
+	Chess_figure* temp_target = nullptr;
 	int x = 0;
 	int y = 0;
 	if (p.x == start.x && p.y < start.y)y = -sz;		//nach oben
@@ -753,17 +762,18 @@ void Chess_window::queen_movement(Point& p) {
 			break;
 		}
 	}
-	if (hostile_present(temp)) {
-		for (int i = 0; i < figures.size(); i++) {
-			if (figures[i].point(0) == temp) {
-				detach(figures[i]);
-				figures.erase(i);
-			}
-		}
-	}
+	if (hostile_present(temp)) temp_target = get_figure(temp);
 	curr_figure->move(temp.x - start.x, temp.y - start.y);
 	if (king_in_check())curr_figure->move(start.x - temp.x, start.y - temp.y);
 	if (start != curr_figure->point(0)) {
+		if (temp_target) {
+			for (int i = 0; i < figures.size(); i++) {
+				if (&figures[i] == temp_target) {
+					detach(figures[i]);
+					figures.erase(i);
+				}
+			}
+		}
 		reset_f_color();
 		if (c_turn == Color::white)c_turn = Color::black;
 		else c_turn = Color::white;
