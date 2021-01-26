@@ -64,6 +64,7 @@ private:
 	bool tile_in_check(Point&);
 	bool king_in_check();
 
+	void pawn_promotion();
 	void pawn_movement(Point&);
 	void rook_movement(Point&);
 	void knight_movement(Point&);
@@ -438,6 +439,29 @@ bool Chess_window::king_in_check() {
 	return false;
 }
 
+void Chess_window::pawn_promotion() {
+
+	for (int i = 0; i < 8; i++) {
+		Point top{ ls + i * sz,us };
+		Point bottom{ ls + i * sz,us + 7 * sz };
+		for (int j = 0; j < figures.size(); j++) {
+			if (figures[j].point(0) == top && figures[j].what_kind() == F_kind::pawn) {
+				detach(figures[j]);
+				figures.erase(j);
+				figures.push_back(new Queen{ top,sz });
+				figures[figures.size() - 1].set_fill_color(Color::white);
+			}
+			if (figures[j].point(0) == bottom && figures[j].what_kind() == F_kind::pawn) {
+				detach(figures[j]);
+				figures.erase(j);
+				figures.push_back(new Queen{ bottom,sz });
+				figures[figures.size() - 1].set_fill_color(Color::black);
+				figures[figures.size() - 1].set_color(Color::white);
+			}
+		}
+	}
+
+}
 void Chess_window::pawn_movement(Point& p) {
 	Point start{ curr_figure->point(0) };
 	Point temp;
@@ -449,12 +473,12 @@ void Chess_window::pawn_movement(Point& p) {
 			x = -sz;
 			y = -sz;
 		}
-		temp = { start.x - sz, start.y };
+		temp = { start.x - sz, us + sz * 3 };
 		if (p.x == curr_figure->point(0).x - sz && p.y == curr_figure->point(0).y - sz && is_ep(temp)) {
 			x = -sz;
 			y = -sz;
 			for (int i = 0; i < figures.size(); i++) {
-				if (figures[i].point(0) == temp) {
+				if (figures[i].point(0) == temp && figures[i].fill_color() == Color::black) {
 					detach(figures[i]);
 					figures.erase(i);
 				}
@@ -464,12 +488,12 @@ void Chess_window::pawn_movement(Point& p) {
 			x = sz;
 			y = -sz;
 		}
-		temp = { start.x + sz, start.y };
+		temp = { start.x + sz, us + sz * 3 };
 		if (p.x == curr_figure->point(0).x + sz && p.y == curr_figure->point(0).y - sz && is_ep(temp)) {
 			x = sz;
 			y = -sz;
 			for (int i = 0; i < figures.size(); i++) {
-				if (figures[i].point(0) == temp) {
+				if (figures[i].point(0) == temp && figures[i].fill_color() == Color::black) {
 					detach(figures[i]);
 					figures.erase(i);
 				}
@@ -490,12 +514,12 @@ void Chess_window::pawn_movement(Point& p) {
 			x = -sz;
 			y = sz;
 		}
-		temp = { start.x - sz, start.y };
+		temp = { start.x - sz, us + sz * 4 };
 		if (p.x == curr_figure->point(0).x - sz && p.y == curr_figure->point(0).y + sz && is_ep(temp)) {
 			x = -sz;
 			y = sz;
 			for (int i = 0; i < figures.size(); i++) {
-				if (figures[i].point(0) == temp) {
+				if (figures[i].point(0) == temp && figures[i].fill_color() == Color::white) {
 					detach(figures[i]);
 					figures.erase(i);
 				}
@@ -505,12 +529,12 @@ void Chess_window::pawn_movement(Point& p) {
 			x = sz;
 			y = sz;
 		}
-		temp = { start.x + sz, start.y };
+		temp = { start.x + sz, us + sz * 4 };
 		if (p.x == curr_figure->point(0).x + sz && p.y == curr_figure->point(0).y + sz && is_ep(temp)) {
 			x = sz;
 			y = sz;
 			for (int i = 0; i < figures.size(); i++) {
-				if (figures[i].point(0) == temp) {
+				if (figures[i].point(0) == temp && figures[i].fill_color() == Color::white) {
 					detach(figures[i]);
 					figures.erase(i);
 				}
@@ -921,8 +945,7 @@ void Chess_window::tile_pressed() {
 
 	}
 
-
-
+	pawn_promotion();
 	check_ep();											//aktualisiert ep
 	refresh_figures();									//detached und attached alle Figuren nochmal, damit die nicht unter den Feldern verschwinden
 	Fl::redraw();
