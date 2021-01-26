@@ -786,33 +786,35 @@ void Chess_window::king_movement(Point& p) {
 	Point temp{ curr_figure->point(0) };
 	Chess_figure* f_temp = nullptr;
 	if (!hostile_present(p) && !tile_empty(p))f_temp = get_figure(p);
-	if (p.x == start.x + sz && p.y == start.y + sz && (tile_empty(p) || hostile_present(p)) && !tile_in_check(p)) {	//unten rechts
-		temp.x += sz;
-		temp.y += sz;
-	}
-	if (p.x == start.x && p.y == start.y + sz && (tile_empty(p) || hostile_present(p)) && !tile_in_check(p)) {		//unten
-		temp.y += sz;
-	}
-	if (p.x == start.x + sz && p.y == start.y && (tile_empty(p) || hostile_present(p)) && !tile_in_check(p)) {		//rechts
-		temp.x += sz;
-	}
-	if (p.x == start.x - sz && p.y == start.y - sz && (tile_empty(p) || hostile_present(p)) && !tile_in_check(p)) {	//oben links
-		temp.x -= sz;
-		temp.y -= sz;
-	}
-	if (p.x == start.x && p.y == start.y - sz && (tile_empty(p) || hostile_present(p)) && !tile_in_check(p)) {		//oben
-		temp.y -= sz;
-	}
-	if (p.x == start.x - sz && p.y == start.y && (tile_empty(p) || hostile_present(p)) && !tile_in_check(p)) {		//links
-		temp.x -= sz;
-	}
-	if (p.x == start.x - sz && p.y == start.y + sz && (tile_empty(p) || hostile_present(p)) && !tile_in_check(p)) {	//unten links
-		temp.x -= sz;
-		temp.y += sz;
-	}
-	if (p.x == start.x + sz && p.y == start.y - sz && (tile_empty(p) || hostile_present(p)) && !tile_in_check(p)) {	//oben rechts
-		temp.x += sz;
-		temp.y -= sz;
+	if ((tile_empty(p) || hostile_present(p)) && !tile_in_check(p)) {
+		if (p.x == start.x + sz && p.y == start.y + sz) {	//unten rechts
+			temp.x += sz;
+			temp.y += sz;
+		}
+		if (p.x == start.x && p.y == start.y + sz) {		//unten
+			temp.y += sz;
+		}
+		if (p.x == start.x + sz && p.y == start.y) {		//rechts
+			temp.x += sz;
+		}
+		if (p.x == start.x - sz && p.y == start.y - sz) {	//oben links
+			temp.x -= sz;
+			temp.y -= sz;
+		}
+		if (p.x == start.x && p.y == start.y - sz) {		//oben
+			temp.y -= sz;
+		}
+		if (p.x == start.x - sz && p.y == start.y) {		//links
+			temp.x -= sz;
+		}
+		if (p.x == start.x - sz && p.y == start.y + sz) {	//unten links
+			temp.x -= sz;
+			temp.y += sz;
+		}
+		if (p.x == start.x + sz && p.y == start.y - sz) {	//oben rechts
+			temp.x += sz;
+			temp.y -= sz;
+		}
 	}
 	if (p.x < start.x && f_temp && f_temp->what_kind() == F_kind::rook) {
 		if (castling(p)) {
@@ -869,9 +871,7 @@ void Chess_window::restart_game() {
 	white_king_ptr = nullptr;
 	c_turn = Color::white;
 
-	for (int i = 0; i < figures.size(); i++) {
-		detach(figures[i]);
-	}
+	for (int i = 0; i < figures.size(); i++) detach(figures[i]);
 	figures.clear();
 	ep.clear();
 	white_castling.clear();
