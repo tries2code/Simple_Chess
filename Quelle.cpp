@@ -123,7 +123,7 @@ void Chess_window::wait_for_button() {
 
 bool Chess_window::tile_empty(Point& p)const {
 	Point curr{ p.x ,p.y };
-	if (p.x < ls || p.x >= ls + 8 * sz || p.y < us || p.y >= us + 8 * sz)return false;
+	if (p.x < ls || p.x > ls + 7 * sz || p.y < us || p.y > us + 7 * sz)return false;
 	for (int i = 0; i < figures.size(); i++) {
 		if (figures[i].point(0) == curr)return false;
 	}
@@ -131,7 +131,7 @@ bool Chess_window::tile_empty(Point& p)const {
 }
 bool Chess_window::hostile_present(Point& p) {
 	Chess_figure* res;
-	if (p.x < ls || p.x >= ls + 8 * sz || p.y < us || p.y >= us + 8 * sz)return false;
+	if (p.x < ls || p.x > ls + 7 * sz || p.y < us || p.y > us + 7 * sz)return false;
 	if (!tile_empty(p))res = get_figure(p);
 	else return false;
 	if (figure_selected && curr_figure->fill_color() == res->fill_color())return false;
@@ -296,6 +296,30 @@ bool Chess_window::tile_in_check(Point& p) {
 	if (hostile_present(temp)) {
 		hostile = get_figure(temp);
 		if (curr_figure->fill_color() == Color::white && hostile->what_kind() == F_kind::pawn)return true;
+		if (hostile->what_kind() == F_kind::king)return true;
+	}
+	temp = p;
+	temp.x += sz;
+	if (hostile_present(temp)) {
+		hostile = get_figure(temp);
+		if (hostile->what_kind() == F_kind::king)return true;
+	}
+	temp = p;
+	temp.x -= sz;
+	if (hostile_present(temp)) {
+		hostile = get_figure(temp);
+		if (hostile->what_kind() == F_kind::king)return true;
+	}
+	temp = p;
+	temp.y -= sz;
+	if (hostile_present(temp)) {
+		hostile = get_figure(temp);
+		if (hostile->what_kind() == F_kind::king)return true;
+	}
+	temp = p;
+	temp.y += sz;
+	if (hostile_present(temp)) {
+		hostile = get_figure(temp);
 		if (hostile->what_kind() == F_kind::king)return true;
 	}
 	//Prüfung Dame und Turm
@@ -821,6 +845,8 @@ void Chess_window::tile_pressed() {
 
 	}
 
+
+
 	check_ep();											//aktualisiert ep
 	refresh_figures();									//detached und attached alle Figuren nochmal, damit die nicht unter den Feldern verschwinden
 	Fl::redraw();
@@ -829,7 +855,7 @@ void Chess_window::tile_pressed() {
 
 
 int main() try {
-	Chess_window win{ {0,0},1000,800,"Schach" };
+	Chess_window win{ {100,100},1000,y_max(),"Schach" };
 
 	win.wait_for_button();
 }
