@@ -1,4 +1,6 @@
 #include"Chess_figures.h"
+#include <FL/fl_ask.H>
+
 #undef vector
 
 constexpr int sz = 100;									//Kommt vielleicht später in die Fenster Klasse, wäre evt besser ein double um Schwulitäten zu vermeiden wenn sz nicht 100 ist
@@ -40,6 +42,7 @@ class Chess_window : public Window {
 	Color c_turn = Color::white;
 
 	Button restart_button;
+	Button undo_button;
 	Button quit_button;
 
 	Vector_ref<Button>field_buttons;					//Für die Knöppe unter den schwarzen Feldern
@@ -48,11 +51,33 @@ class Chess_window : public Window {
 	vector<Point>ep;									//Mögliche en passant Ziele
 	vector<Point>white_castling;
 	vector<Point>black_castling;
+
+	//Buffers////////
+	bool b_figure_selected;
+	bool b_white_l_rook = true;
+	bool b_white_king = true;
+	bool b_white_r_rook = true;
+
+	bool b_black_l_rook = true;
+	bool b_black_king = true;
+	bool b_black_r_rook = true;
+
+	Point b_curr_figure;
+	Chess_figure* b_black_king_ptr = nullptr;
+	Chess_figure* b_white_king_ptr = nullptr;
+	Color b_c_turn = Color::white;
+
+	Vector_ref<Chess_figure>b_figures;
+	vector<Point>b_ep;
+	vector<Point>b_white_castling;
+	vector<Point>b_black_castling;
+
 public:
 	Chess_window(Point xy, int w, int h, const string& title);
 	void wait_for_button();
 
 private:
+	bool valid_tile(Point&);
 	bool tile_empty(Point&)const;
 	bool hostile_present(Point&);
 	bool is_ep(Point&);									//Prüft ob es sich bei der übergebenen Koordinate um eine en passanr Ziel handelt
@@ -63,6 +88,9 @@ private:
 	bool castling(Point&);
 	bool tile_in_check(Point&);
 	bool king_in_check();
+	bool checkmate();
+	void copy_to_buffer();
+	void undo();
 
 	void pawn_promotion();
 	void pawn_movement(Point&);
@@ -73,6 +101,7 @@ private:
 	void king_movement(Point& p);
 
 	static void cb_restart(Address, Address addr) { static_cast<Chess_window*>(addr)->restart_game(); }
+	static void cb_undo(Address, Address addr) { static_cast<Chess_window*>(addr)->undo(); }
 	static void cb_quit(Address, Address addr) { reference_to<Chess_window>(addr).quit(); }		//Ist die Stroustrup Variante, macht auch nur 		return *static_cast<W*>(pw);
 	static void cb_tile_pressed(Address, Address addr) { reference_to<Chess_window>(addr).tile_pressed(); }
 
@@ -81,10 +110,11 @@ private:
 	void tile_pressed();
 };
 
-Chess_window::Chess_window(Point xy, int w, int h, const string& title) :Window(w, h, title),
+Chess_window::Chess_window(Point xy, int w, int h, const string& title) :Window(xy, w, h, title),
 button_pushed(false), figure_selected(false),
 restart_button(Point(x_max() - 70, 0), 70, 20, "Restart", cb_restart),
-quit_button(Point(x_max() - 70, 30), 70, 20, "Quit", cb_quit) {
+undo_button(Point(x_max() - 70, 30), 70, 20, "Undo", cb_undo),
+quit_button(Point(x_max() - 70, 60), 70, 20, "Quit", cb_quit) {
 
 	for (int x = 0; x < 8; x++) {
 		for (int y = 0; y < 8; y++) {
@@ -124,7 +154,9 @@ quit_button(Point(x_max() - 70, 30), 70, 20, "Quit", cb_quit) {
 
 		}
 	}
+
 	attach(restart_button);
+	attach(undo_button);
 	attach(quit_button);
 	size_range(w, h, w, h);	//Fixiert Fenster
 }
@@ -134,6 +166,10 @@ void Chess_window::wait_for_button() {
 	Fl::redraw();
 }
 
+bool Chess_window::valid_tile(Point& p) {
+	if (p.x < ls || p.x > ls + 7 * sz || p.y < us || p.y > us + 7 * sz)return false;
+	return true;
+}
 bool Chess_window::tile_empty(Point& p)const {
 	Point curr{ p.x ,p.y };
 	if (p.x < ls || p.x > ls + 7 * sz || p.y < us || p.y > us + 7 * sz)return false;
@@ -147,7 +183,7 @@ bool Chess_window::hostile_present(Point& p) {
 	if (p.x < ls || p.x > ls + 7 * sz || p.y < us || p.y > us + 7 * sz)return false;
 	if (!tile_empty(p))res = get_figure(p);
 	else return false;
-	if (figure_selected && curr_figure->fill_color() == res->fill_color())return false;
+	if (c_turn == res->fill_color())return false;
 	return true;
 }
 bool Chess_window::is_ep(Point& p) {
@@ -283,7 +319,7 @@ bool Chess_window::tile_in_check(Point& p) {
 	temp.y += sz;
 	if (hostile_present(temp)) {
 		hostile = get_figure(temp);
-		if (curr_figure->fill_color() == Color::black && hostile->what_kind() == F_kind::pawn)return true;
+		if (c_turn == Color::black && hostile->what_kind() == F_kind::pawn)return true;
 		if (hostile->what_kind() == F_kind::king)return true;
 
 	}
@@ -292,7 +328,7 @@ bool Chess_window::tile_in_check(Point& p) {
 	temp.y += sz;
 	if (hostile_present(temp)) {
 		hostile = get_figure(temp);
-		if (curr_figure->fill_color() == Color::black && hostile->what_kind() == F_kind::pawn)return true;
+		if (c_turn == Color::black && hostile->what_kind() == F_kind::pawn)return true;
 		if (hostile->what_kind() == F_kind::king)return true;
 	}
 	temp = p;
@@ -300,7 +336,7 @@ bool Chess_window::tile_in_check(Point& p) {
 	temp.y -= sz;
 	if (hostile_present(temp)) {
 		hostile = get_figure(temp);
-		if (curr_figure->fill_color() == Color::white && hostile->what_kind() == F_kind::pawn)return true;
+		if (c_turn == Color::white && hostile->what_kind() == F_kind::pawn)return true;
 		if (hostile->what_kind() == F_kind::king)return true;
 	}
 	temp = p;
@@ -308,7 +344,7 @@ bool Chess_window::tile_in_check(Point& p) {
 	temp.y -= sz;
 	if (hostile_present(temp)) {
 		hostile = get_figure(temp);
-		if (curr_figure->fill_color() == Color::white && hostile->what_kind() == F_kind::pawn)return true;
+		if (c_turn == Color::white && hostile->what_kind() == F_kind::pawn)return true;
 		if (hostile->what_kind() == F_kind::king)return true;
 	}
 	temp = p;
@@ -437,6 +473,191 @@ bool Chess_window::king_in_check() {
 	Point temp{ temp_ptr->point(0) };
 	if (tile_in_check(temp))return true;
 	return false;
+}
+bool Chess_window::checkmate() {
+
+	if (!king_in_check())return false;
+
+	Point p;
+	c_turn == Color::black ? p = black_king_ptr->point(0) : p = white_king_ptr->point(0);
+	Point pp = p;
+
+	pp.x += sz;												//rechts
+	if (valid_tile(pp) && !tile_in_check(pp) && (tile_empty(pp) || hostile_present(pp)))return false;
+	pp = p;
+	pp.x -= sz;												//links
+	if (valid_tile(pp) && !tile_in_check(pp) && (tile_empty(pp) || hostile_present(pp)))return false;
+	pp = p;
+	pp.y -= sz;												//oben
+	if (valid_tile(pp) && !tile_in_check(pp) && (tile_empty(pp) || hostile_present(pp)))return false;
+	pp = p;
+	pp.y += sz;												//unten
+	if (valid_tile(pp) && !tile_in_check(pp) && (tile_empty(pp) || hostile_present(pp)))return false;
+	pp = p;
+	pp.x += sz;												//unten rechts
+	pp.y += sz;
+	if (valid_tile(pp) && !tile_in_check(pp) && (tile_empty(pp) || hostile_present(pp)))return false;
+	pp = p;
+	pp.x -= sz;												//unten links
+	pp.y += sz;
+	if (valid_tile(pp) && !tile_in_check(pp) && (tile_empty(pp) || hostile_present(pp)))return false;
+	pp = p;
+	pp.x += sz;												//oben rechts
+	pp.y -= sz;
+	if (valid_tile(pp) && !tile_in_check(pp) && (tile_empty(pp) || hostile_present(pp)))return false;
+	pp = p;
+	pp.x -= sz;												//oben links
+	pp.y -= sz;
+	if (valid_tile(pp) && !tile_in_check(pp) && (tile_empty(pp) || hostile_present(pp)))return false;
+
+	for (int i = 0; i < tiles.size(); i++) {
+
+		Point p{ tiles[i].point(0) };
+
+		if ((tile_empty(p) || hostile_present(p)) && !tile_in_check(p)) {
+
+			for (int j = 0; j < figures.size(); j++) {
+
+				if (figures[j].fill_color() == c_turn) {
+
+					curr_figure = &figures[j];
+					F_kind c_kind = curr_figure->what_kind();
+					copy_to_buffer();
+
+					switch (c_kind) {
+					case F_kind::pawn:
+						pawn_movement(p);
+						break;
+					case F_kind::rook:
+						rook_movement(p);
+						break;
+					case F_kind::knight:
+						knight_movement(p);
+						break;
+					case F_kind::bishop:
+						bishop_movement(p);
+						break;
+					case F_kind::queen:
+						queen_movement(p);
+						break;
+					case F_kind::king:
+						king_movement(p);
+						break;
+					}
+					pawn_promotion();
+
+					if (!king_in_check()) {
+						undo();
+						curr_figure = nullptr;
+						return false;
+					}
+					else {
+						undo();
+						curr_figure = nullptr;
+					}
+				}
+			}
+		}
+	}
+	return true;
+}
+void Chess_window::copy_to_buffer() {
+
+	//Buffer Vektoren leeren
+	b_figures.clear();
+	b_ep.clear();
+	b_white_castling.clear();
+	b_black_castling.clear();
+
+	//Bools buffern
+	b_figure_selected = figure_selected;
+	b_white_l_rook = white_l_rook;
+	b_white_king = white_king;
+	b_white_r_rook = white_r_rook;
+	b_black_l_rook = black_l_rook;
+	b_black_king = black_king;
+	b_black_r_rook = black_r_rook;
+
+	//curr_figers Position zwischenspeichern
+	b_curr_figure = curr_figure->point(0);				//Muss anhand von point(0) neu ermittelt werden, da curr_figure ein Pointer ist
+
+	//Damit der andere Spieler wieder dran ist
+	b_c_turn = c_turn;
+
+	//Buffern der Figuren, man muss im Buffer neue Figuren erstellen, damit sich die Figuren im Buffer nicht mitbewegen
+	for (int i = 0; i < figures.size(); i++) {
+
+		Point p{ figures[i].point(0) };
+		Color lc{ figures[i].color() };
+		Color fc{ figures[i].fill_color() };
+
+		if (figures[i].what_kind() == F_kind::pawn)
+			b_figures.push_back(new Pawn{ {p.x,p.y},sz });
+
+		if (figures[i].what_kind() == F_kind::rook)
+			b_figures.push_back(new Rook{ {p.x,p.y},sz });
+
+		if (figures[i].what_kind() == F_kind::bishop)
+			b_figures.push_back(new Bishop{ {p.x,p.y},sz });
+
+		if (figures[i].what_kind() == F_kind::knight)
+			b_figures.push_back(new Knight{ {p.x,p.y},sz });
+
+		if (figures[i].what_kind() == F_kind::queen)
+			b_figures.push_back(new Queen{ {p.x,p.y},sz });
+
+		if (figures[i].what_kind() == F_kind::king)
+			b_figures.push_back(new King{ {p.x,p.y},sz });
+
+		b_figures[b_figures.size() - 1].set_color(lc);
+		b_figures[b_figures.size() - 1].set_fill_color(fc);
+	}
+
+	//Vektoren buffern
+	b_ep = ep;
+	b_white_castling = white_castling;
+	b_black_castling = black_castling;
+}
+void Chess_window::undo() {
+
+	for (int j = 0; j < figures.size(); j++) detach(figures[j]);			//Alte Figurenvom Bildschirm löschen
+
+	//Vektoren leeren
+	figures.clear();
+	ep.clear();
+	white_castling.clear();
+	black_castling.clear();
+
+	//Pointer zurücksetzen
+	black_king_ptr = nullptr;
+	white_king_ptr = nullptr;
+	curr_figure = nullptr;
+
+	//Vektoren aus dem Buffer laden
+	figures = b_figures;
+	ep = b_ep;
+	white_castling = b_white_castling;
+	black_castling = b_white_castling;
+
+	//Auf Fenster Platzieren, Adressen für Pointer ermitteln
+	for (int i = 0; i < figures.size(); i++) {
+		attach(figures[i]);
+		if (figures[i].what_kind() == F_kind::king && figures[i].fill_color() == Color::black)black_king_ptr = &figures[i];
+		if (figures[i].what_kind() == F_kind::king && figures[i].fill_color() == Color::white)white_king_ptr = &figures[i];
+		if (figures[i].point(0) == b_curr_figure) curr_figure = &figures[i];
+	}
+
+	//Bools und c_turn aus Buffer wiederhestellen
+	figure_selected = b_figure_selected;
+	white_l_rook = b_white_l_rook;
+	white_king = b_white_king;
+	white_r_rook = b_white_r_rook;
+	black_l_rook = b_black_l_rook;
+	black_king = b_black_king;
+	black_r_rook = b_black_r_rook;
+	c_turn = b_c_turn;
+
+	Fl::redraw();
 }
 
 void Chess_window::pawn_promotion() {
@@ -906,10 +1127,10 @@ void Chess_window::restart_game() {
 Fl:redraw();
 }
 void Chess_window::tile_pressed() {
+
 	Chess_figure* temp_figure = nullptr;
 	Point p = get_point(Fl::event_x(), Fl::event_y());									//p=Koordinaten des aktuell gedrücketen Feldes
 	if (!tile_empty(p)) temp_figure = get_figure(p);
-
 
 	if (!tile_empty(p) && !figure_selected) {	//Spielstein auswählen
 		Chess_figure* temp = get_figure(p);
@@ -928,9 +1149,10 @@ void Chess_window::tile_pressed() {
 			if (curr_figure->fill_color() == c_turn) curr_figure->set_color(Color::cyan);
 		}
 	}
-
 	if (curr_figure && (tile_empty(p) || hostile_present(p) || temp_figure->what_kind() == F_kind::rook)) {
 		F_kind c_kind = curr_figure->what_kind();
+
+		copy_to_buffer();		//Wird hier nur gebraucht falls man einen Undo Knopf einbauen möchte
 
 		switch (c_kind) {
 		case F_kind::pawn:
@@ -952,14 +1174,21 @@ void Chess_window::tile_pressed() {
 			king_movement(p);
 			break;
 		}
-
 	}
-
 	pawn_promotion();
 	check_ep();											//aktualisiert ep
 	refresh_figures();									//detached und attached alle Figuren nochmal, damit die nicht unter den Feldern verschwinden
 	Fl::redraw();
-	cout << "p: " << p.x << " " << p.y << endl;			//Nur zum debuggen
+	if (checkmate()) {									// Spielende 
+		switch (fl_choice("Checkmate! New game?", "Yes", "No", 0)) {
+		case 0:
+			restart_game();								// Spielbrett neu aufbauen
+			break;
+		case 1:
+			quit();
+			break;
+		}
+	}
 }
 
 
@@ -973,3 +1202,4 @@ catch (exception& e) {
 	cerr << e.what();
 	cin.get();
 }
+
