@@ -1,3 +1,4 @@
+
 #include"Chess_figures.h"
 #include <FL/fl_ask.H>
 
@@ -151,10 +152,8 @@ quit_button(Point(x_max() - 70, 60), 70, 20, "Quit", cb_quit) {
 			//King Pointer
 			if (figures[figures.size() - 1].fill_color() == Color::black && figures[figures.size() - 1].what_kind() == F_kind::king)black_king_ptr = &figures[figures.size() - 1];
 			if (figures[figures.size() - 1].fill_color() == Color::white && figures[figures.size() - 1].what_kind() == F_kind::king)white_king_ptr = &figures[figures.size() - 1];
-
 		}
 	}
-
 	attach(restart_button);
 	attach(undo_button);
 	attach(quit_button);
@@ -165,7 +164,6 @@ void Chess_window::wait_for_button() {
 	button_pushed = false;
 	Fl::redraw();
 }
-
 bool Chess_window::valid_tile(Point& p) {
 	if (p.x < ls || p.x > ls + 7 * sz || p.y < us || p.y > us + 7 * sz)return false;
 	return true;
@@ -563,7 +561,17 @@ bool Chess_window::checkmate() {
 }
 void Chess_window::copy_to_buffer() {
 
+	//curr_figers Position zwischenspeichern
+	b_curr_figure = curr_figure->point(0);				//Muss anhand von point(0) neu ermittelt werden, da curr_figure ein Pointer ist
+
 	//Buffer Vektoren leeren
+
+	for (int i = 0; i < b_figures.size(); i++) {
+		//if (&b_figures[i] != curr_figure) {
+		Chess_figure* temp{ &b_figures[i] };
+		delete temp;
+		//}
+	}
 	b_figures.clear();
 	b_ep.clear();
 	b_white_castling.clear();
@@ -577,9 +585,6 @@ void Chess_window::copy_to_buffer() {
 	b_black_l_rook = black_l_rook;
 	b_black_king = black_king;
 	b_black_r_rook = black_r_rook;
-
-	//curr_figers Position zwischenspeichern
-	b_curr_figure = curr_figure->point(0);				//Muss anhand von point(0) neu ermittelt werden, da curr_figure ein Pointer ist
 
 	//Damit der andere Spieler wieder dran ist
 	b_c_turn = c_turn;
@@ -620,8 +625,11 @@ void Chess_window::copy_to_buffer() {
 }
 void Chess_window::undo() {
 
-	for (int j = 0; j < figures.size(); j++) detach(figures[j]);			//Alte Figurenvom Bildschirm löschen
-
+	for (int j = 0; j < figures.size(); j++) {//Alte Figurenvom Bildschirm löschen
+		detach(figures[j]);
+		Chess_figure* temp{ &figures[j] };
+		delete temp;
+	}
 	//Vektoren leeren
 	figures.clear();
 	ep.clear();
@@ -634,7 +642,33 @@ void Chess_window::undo() {
 	curr_figure = nullptr;
 
 	//Vektoren aus dem Buffer laden
-	figures = b_figures;
+	for (int i = 0; i < b_figures.size(); i++) {
+
+		Point p{ b_figures[i].point(0) };
+		Color lc{ b_figures[i].color() };
+		Color fc{ b_figures[i].fill_color() };
+
+		if (b_figures[i].what_kind() == F_kind::pawn)
+			figures.push_back(new Pawn{ {p.x,p.y},sz });
+
+		if (b_figures[i].what_kind() == F_kind::rook)
+			figures.push_back(new Rook{ {p.x,p.y},sz });
+
+		if (b_figures[i].what_kind() == F_kind::bishop)
+			figures.push_back(new Bishop{ {p.x,p.y},sz });
+
+		if (b_figures[i].what_kind() == F_kind::knight)
+			figures.push_back(new Knight{ {p.x,p.y},sz });
+
+		if (b_figures[i].what_kind() == F_kind::queen)
+			figures.push_back(new Queen{ {p.x,p.y},sz });
+
+		if (b_figures[i].what_kind() == F_kind::king)
+			figures.push_back(new King{ {p.x,p.y},sz });
+
+		figures[figures.size() - 1].set_color(lc);
+		figures[figures.size() - 1].set_fill_color(fc);
+	}
 	ep = b_ep;
 	white_castling = b_white_castling;
 	black_castling = b_white_castling;
@@ -702,6 +736,8 @@ void Chess_window::pawn_movement(Point& p) {
 			for (int i = 0; i < figures.size(); i++) {
 				if (figures[i].point(0) == temp && figures[i].fill_color() == Color::black) {
 					detach(figures[i]);
+					temp_target = &figures[i];
+					delete temp_target;
 					figures.erase(i);
 				}
 			}
@@ -717,6 +753,8 @@ void Chess_window::pawn_movement(Point& p) {
 			for (int i = 0; i < figures.size(); i++) {
 				if (figures[i].point(0) == temp && figures[i].fill_color() == Color::black) {
 					detach(figures[i]);
+					temp_target = &figures[i];
+					delete temp_target;
 					figures.erase(i);
 				}
 			}
@@ -743,6 +781,8 @@ void Chess_window::pawn_movement(Point& p) {
 			for (int i = 0; i < figures.size(); i++) {
 				if (figures[i].point(0) == temp && figures[i].fill_color() == Color::white) {
 					detach(figures[i]);
+					temp_target = &figures[i];
+					delete temp_target;
 					figures.erase(i);
 				}
 			}
@@ -758,6 +798,8 @@ void Chess_window::pawn_movement(Point& p) {
 			for (int i = 0; i < figures.size(); i++) {
 				if (figures[i].point(0) == temp && figures[i].fill_color() == Color::white) {
 					detach(figures[i]);
+					temp_target = &figures[i];
+					delete temp_target;
 					figures.erase(i);
 				}
 			}
@@ -782,6 +824,7 @@ void Chess_window::pawn_movement(Point& p) {
 			for (int i = 0; i < figures.size(); i++) {
 				if (&figures[i] == temp_target) {
 					detach(figures[i]);
+					delete temp_target;
 					figures.erase(i);
 				}
 			}
@@ -829,6 +872,7 @@ void Chess_window::rook_movement(Point& p) {
 			for (int i = 0; i < figures.size(); i++) {
 				if (&figures[i] == temp_target) {
 					detach(figures[i]);
+					delete temp_target;
 					figures.erase(i);
 				}
 			}
@@ -884,6 +928,7 @@ void Chess_window::knight_movement(Point& p) {
 			for (int i = 0; i < figures.size(); i++) {
 				if (&figures[i] == temp_target) {
 					detach(figures[i]);
+					delete temp_target;
 					figures.erase(i);
 				}
 			}
@@ -936,6 +981,7 @@ void Chess_window::bishop_movement(Point& p) {
 			for (int i = 0; i < figures.size(); i++) {
 				if (&figures[i] == temp_target) {
 					detach(figures[i]);
+					delete temp_target;
 					figures.erase(i);
 				}
 			}
@@ -991,6 +1037,7 @@ void Chess_window::queen_movement(Point& p) {
 			for (int i = 0; i < figures.size(); i++) {
 				if (&figures[i] == temp_target) {
 					detach(figures[i]);
+					delete temp_target;
 					figures.erase(i);
 				}
 			}
@@ -1056,6 +1103,8 @@ void Chess_window::king_movement(Point& p) {
 		for (int i = 0; i < figures.size(); i++) {
 			if (figures[i].point(0) == temp) {
 				detach(figures[i]);
+				Chess_figure* temp_ptr = &figures[i];
+				delete temp_ptr;
 				figures.erase(i);
 			}
 		}
@@ -1175,11 +1224,12 @@ void Chess_window::tile_pressed() {
 			break;
 		}
 	}
+
 	pawn_promotion();
 	check_ep();											//aktualisiert ep
 	refresh_figures();									//detached und attached alle Figuren nochmal, damit die nicht unter den Feldern verschwinden
 	Fl::redraw();
-	if (checkmate()) {									// Spielende 
+	if (checkmate()) {									// Spielende
 		switch (fl_choice("Checkmate! New game?", "Yes", "No", 0)) {
 		case 0:
 			restart_game();								// Spielbrett neu aufbauen
@@ -1195,6 +1245,7 @@ void Chess_window::tile_pressed() {
 int main() try {
 	Chess_window win{ {100,100},1000,y_max(),"Schach" };
 
+
 	win.wait_for_button();
 }
 catch (exception& e) {
@@ -1202,4 +1253,5 @@ catch (exception& e) {
 	cerr << e.what();
 	cin.get();
 }
+
 
