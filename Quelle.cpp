@@ -508,11 +508,18 @@ bool Chess_window::checkmate() {
 	pp.y -= sz;
 	if (valid_tile(pp) && !tile_in_check(pp) && (tile_empty(pp) || hostile_present(pp)))return false;
 
+	Point p_table;								//rettet curr_figure's Koordinateb falls checkmate hier weiter macht. curr_figure wird hinterher wieder hergestellt
+	bool p_t = false;
+	if (curr_figure) {
+		p_table = curr_figure->point(0);
+		p_t = true;
+	}
+
 	for (int i = 0; i < tiles.size(); i++) {
 
 		Point p{ tiles[i].point(0) };
 
-		if ((tile_empty(p) || hostile_present(p)) && !tile_in_check(p)) {
+		if ((tile_empty(p) || hostile_present(p))) {
 
 			for (int j = 0; j < figures.size(); j++) {
 
@@ -546,7 +553,12 @@ bool Chess_window::checkmate() {
 
 					if (!king_in_check()) {
 						undo();
-						curr_figure = nullptr;
+						if (p_t) {												//Wiederherstellung curr_figure
+							for (int i = 0; i < figures.size(); i++) {
+								if (figures[i].point(0) == p_table)curr_figure = &figures[i];
+							}
+						}
+						else curr_figure = nullptr;
 						return false;
 					}
 					else {
@@ -1181,7 +1193,7 @@ void Chess_window::tile_pressed() {
 	Point p = get_point(Fl::event_x(), Fl::event_y());									//p=Koordinaten des aktuell gedrücketen Feldes
 	if (!tile_empty(p)) temp_figure = get_figure(p);
 
-	if (!tile_empty(p) && !figure_selected) {	//Spielstein auswählen
+	if (!tile_empty(p) && !curr_figure) {	//Spielstein auswählen
 		Chess_figure* temp = get_figure(p);
 		if (temp->fill_color() == c_turn) {
 			curr_figure = get_figure(p);
@@ -1229,6 +1241,7 @@ void Chess_window::tile_pressed() {
 	check_ep();											//aktualisiert ep
 	refresh_figures();									//detached und attached alle Figuren nochmal, damit die nicht unter den Feldern verschwinden
 	Fl::redraw();
+
 	if (checkmate()) {									// Spielende
 		switch (fl_choice("Checkmate! New game?", "Yes", "No", 0)) {
 		case 0:
