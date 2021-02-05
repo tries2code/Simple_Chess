@@ -48,6 +48,7 @@ namespace Graph_lib {
 
 	inline int x_max() { return Fl::w(); }	// width of screen in pixels
 	inline int y_max() { return Fl::h(); }	// height of screen in pixels
+	
 
 }
 #endif

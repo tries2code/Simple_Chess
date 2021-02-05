@@ -162,10 +162,13 @@
     <ClInclude Include="Graph.h" />
     <ClInclude Include="GUI.h" />
     <ClInclude Include="Point.h" />
-    <ClInclude Include="Rules_window.h" />
     <ClInclude Include="Simple_window.h" />
     <ClInclude Include="std_lib_facilities.h" />
+    <ClInclude Include="Sub_Windows.h" />
     <ClInclude Include="Window.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="rules.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

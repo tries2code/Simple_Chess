@@ -41,9 +41,6 @@
     <ClInclude Include="Point.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="Rules_window.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
     <ClInclude Include="Simple_window.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
@@ -56,5 +53,11 @@
     <ClInclude Include="chess_figures.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="Sub_Windows.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="rules.txt" />
   </ItemGroup>
 </Project>

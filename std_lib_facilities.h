@@ -22,23 +22,24 @@
 #ifndef H112
 #define H112 251113L
 
+//Für Schach diverse includes rauskommentiert
 
 #include<iostream>
-#include<iomanip>
+//#include<iomanip>
 #include<fstream>
 #include<sstream>
-#include<cmath>
-#include<cstdlib>
-#include<string>
-#include<list>
-#include <forward_list>
-#include<vector>
-#include<unordered_map>
-#include<algorithm>
-#include <array>
-#include <regex>
+//#include<cmath>
+//#include<cstdlib>
+//#include<string>
+//#include<list>
+//#include <forward_list>
+//#include<vector>
+//#include<unordered_map>
+//#include<algorithm>
+//#include <array>
+//#include <regex>
 #include<random>
-#include<stdexcept>
+//#include<stdexcept>
 
 //------------------------------------------------------------------------------
 

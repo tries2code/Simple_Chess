@@ -1,11 +1,14 @@
 #include"Chess_figures.h"
+#include"Sub_Windows.h"
 #include <FL/fl_ask.H>
 
 #undef vector
 
+
 constexpr int sz = 100;									//Kommt vielleicht später in die Fenster Klasse, wäre evt besser ein double um Schwulitäten zu vermeiden wenn sz nicht 100 ist
-constexpr int ls = 100;									//Abstand zum linken Fensterrand
-constexpr int us = 0;									//Abstand zum oberen Fensterrand
+string text;
+F_kind promotion_choice = F_kind::none;
+
 
 //Helfer Funktionen
 Point get_point(int x, int y) {							//Ermittelt Koordinaten für Spielfeld
@@ -24,6 +27,7 @@ bool operator!=(const Graph_lib::Color& a, const Graph_lib::Color& b) {				//Ver
 class Chess_window : public Window {
 
 	bool button_pushed;
+	bool promotion_ongoing = false;
 
 	bool white_l_rook = true;
 	bool white_king = true;
@@ -40,6 +44,7 @@ class Chess_window : public Window {
 
 	Button restart_button;
 	Button undo_button;
+	Button rules_button;
 	Button quit_button;
 
 	Vector_ref<Button>field_buttons;					//Für die Knöppe unter den schwarzen Feldern
@@ -98,28 +103,31 @@ private:
 
 	static void cb_restart(Address, Address addr) { static_cast<Chess_window*>(addr)->restart_game(); }
 	static void cb_undo(Address, Address addr) { static_cast<Chess_window*>(addr)->undo(); }
+	static void cb_rules(Address, Address addr) { static_cast<Chess_window*>(addr)->rules(); }
 	static void cb_quit(Address, Address addr) { reference_to<Chess_window>(addr).quit(); }		//Ist die Stroustrup Variante, macht auch nur 		return *static_cast<W*>(pw);
 	static void cb_tile_pressed(Address, Address addr) { reference_to<Chess_window>(addr).tile_pressed(); }
 
+	void rules() { Rules_window* rls = new Rules_window({ 100,100 }, 1300, 1000, "Rules"); }
 	void restart_game();
 	void quit() { hide(); button_pushed = true; }
 	void tile_pressed();
 };
 
-Chess_window::Chess_window(Point xy, int w, int h, const string& title) :Window(xy, w, h, title),
+Chess_window::Chess_window(Point xy, int w, int h, const string& title) :Window( w, h, title),
 button_pushed(false),
 restart_button(Point(x_max() - 70, 0), 70, 20, "Restart", cb_restart),
 undo_button(Point(x_max() - 70, 30), 70, 20, "Undo", cb_undo),
-quit_button(Point(x_max() - 70, 60), 70, 20, "Quit", cb_quit) {
+rules_button(Point(x_max() - 70, 60), 70, 20, "Rules", cb_rules),
+quit_button(Point(x_max() - 70, 90), 70, 20, "Quit", cb_quit) {
 
 	for (int x = 0; x < 8; x++) {
 		for (int y = 0; y < 8; y++) {
 			//Knöppe unter den Feldern
-			field_buttons.push_back(new Button{ {ls + x * sz,us + y * sz},sz,sz ," ",cb_tile_pressed });
+			field_buttons.push_back(new Button{ { x * sz, y * sz},sz,sz ," ",cb_tile_pressed });
 			attach(field_buttons[field_buttons.size() - 1]);
 
 			//Felder
-			tiles.push_back(new Graph_lib::Rectangle{ {ls + x * sz,us + y * sz},sz,sz });
+			tiles.push_back(new Graph_lib::Rectangle{ { x * sz, y * sz},sz,sz });
 			tiles[tiles.size() - 1].set_color(fl_rgb_color(153, 76, 0));
 			if ((y + x) % 2 != 0)tiles[tiles.size() - 1].set_fill_color(fl_rgb_color(204, 102, 0));
 			if ((y + x) % 2 == 0)tiles[tiles.size() - 1].set_fill_color(fl_rgb_color(255, 255, 204));
@@ -127,12 +135,12 @@ quit_button(Point(x_max() - 70, 60), 70, 20, "Quit", cb_quit) {
 			attach(tiles[tiles.size() - 1]);
 
 			//Figuren
-			if ((y == 0 || y == 7) && (x == 0 || x == 7))figures.push_back(new Rook{ {ls + x * sz ,us + y * sz },sz });
-			if ((y == 0 || y == 7) && (x == 1 || x == 6))figures.push_back(new Knight{ {ls + x * sz ,us + y * sz },sz });
-			if ((y == 0 || y == 7) && (x == 2 || x == 5))figures.push_back(new Bishop{ {ls + x * sz ,us + y * sz },sz });
-			if ((y == 0 || y == 7) && (x == 3))figures.push_back(new Queen{ {ls + x * sz ,us + y * sz },sz });
-			if ((y == 0 || y == 7) && (x == 4))figures.push_back(new King{ {ls + x * sz ,us + y * sz },sz });
-			if (y == 1 || y == 6)figures.push_back(new Pawn{ {ls + x * sz ,us + y * sz },sz });
+			if ((y == 0 || y == 7) && (x == 0 || x == 7))figures.push_back(new Rook{ { x * sz , y * sz },sz });
+			if ((y == 0 || y == 7) && (x == 1 || x == 6))figures.push_back(new Knight{ { x * sz , y * sz },sz });
+			if ((y == 0 || y == 7) && (x == 2 || x == 5))figures.push_back(new Bishop{ { x * sz , y * sz },sz });
+			if ((y == 0 || y == 7) && (x == 3))figures.push_back(new Queen{ { x * sz , y * sz },sz });
+			if ((y == 0 || y == 7) && (x == 4))figures.push_back(new King{ { x * sz , y * sz },sz });
+			if (y == 1 || y == 6)figures.push_back(new Pawn{ { x * sz , y * sz },sz });
 			attach(figures[figures.size() - 1]);
 
 			if (y == 0 || y == 1) { figures[figures.size() - 1].set_color(Color::white); figures[figures.size() - 1].set_fill_color(Color::black); }
@@ -151,6 +159,7 @@ quit_button(Point(x_max() - 70, 60), 70, 20, "Quit", cb_quit) {
 	}
 	attach(restart_button);
 	attach(undo_button);
+	attach(rules_button);
 	attach(quit_button);
 	size_range(w, h, w, h);	//Fixiert Fenster
 }
@@ -160,12 +169,12 @@ void Chess_window::wait_for_button() {
 	Fl::redraw();
 }
 bool Chess_window::valid_tile(Point& p) {
-	if (p.x < ls || p.x > ls + 7 * sz || p.y < us || p.y > us + 7 * sz)return false;
+	if (p.x < 0 || p.x > 0 + 7 * sz || p.y < 0 || p.y > 0 + 7 * sz)return false;
 	return true;
 }
 bool Chess_window::tile_empty(Point& p)const {
 	Point curr{ p.x ,p.y };
-	if (p.x < ls || p.x > ls + 7 * sz || p.y < us || p.y > us + 7 * sz)return false;
+	if (p.x < 0 || p.x > 0 + 7 * sz || p.y < 0 || p.y > 0 + 7 * sz)return false;
 	for (int i = 0; i < figures.size(); i++) {
 		if (figures[i].point(0) == curr)return false;
 	}
@@ -173,7 +182,7 @@ bool Chess_window::tile_empty(Point& p)const {
 }
 bool Chess_window::hostile_present(Point& p) {
 	Chess_figure* res;
-	if (p.x < ls || p.x > ls + 7 * sz || p.y < us || p.y > us + 7 * sz)return false;
+	if (p.x < 0 || p.x > 0 + 7 * sz || p.y < 0 || p.y > 0 + 7 * sz)return false;
 	if (!tile_empty(p))res = get_figure(p);
 	else return false;
 	if (c_turn == res->fill_color())return false;
@@ -363,7 +372,7 @@ bool Chess_window::tile_in_check(Point& p) {
 	}
 	//Prüfung Dame und Turm
 	temp = p;
-	while (temp.x <= ls + 7 * sz) {
+	while (temp.x <= 0 + 7 * sz) {
 		temp.x += sz;
 		if (hostile_present(temp)) {
 			hostile = get_figure(temp);
@@ -374,7 +383,7 @@ bool Chess_window::tile_in_check(Point& p) {
 		if (!tile_empty(temp) && black_king_ptr->point(0) != temp && white_king_ptr->point(0) != temp)break;
 	}
 	temp = p;
-	while (temp.x >= ls) {
+	while (temp.x >= 0) {
 		temp.x -= sz;
 		if (hostile_present(temp)) {
 			hostile = get_figure(temp);
@@ -385,7 +394,7 @@ bool Chess_window::tile_in_check(Point& p) {
 		if (!tile_empty(temp) && black_king_ptr->point(0) != temp && white_king_ptr->point(0) != temp)break;
 	}
 	temp = p;
-	while (temp.y <= us + 7 * sz) {
+	while (temp.y <= 0 + 7 * sz) {
 		temp.y += sz;
 		if (hostile_present(temp)) {
 			hostile = get_figure(temp);
@@ -396,7 +405,7 @@ bool Chess_window::tile_in_check(Point& p) {
 		if (!tile_empty(temp) && black_king_ptr->point(0) != temp && white_king_ptr->point(0) != temp)break;
 	}
 	temp = p;
-	while (temp.y >= us) {
+	while (temp.y >= 0) {
 		temp.y -= sz;
 		if (hostile_present(temp)) {
 			hostile = get_figure(temp);
@@ -408,7 +417,7 @@ bool Chess_window::tile_in_check(Point& p) {
 	}
 	//Prüfung Läufer oder Dame
 	temp = p;
-	while (temp.x <= ls + 7 * sz && temp.y <= us + 7 * sz) {
+	while (temp.x <= 0 + 7 * sz && temp.y <= 0 + 7 * sz) {
 		temp.x += sz;
 		temp.y += sz;
 		if (hostile_present(temp)) {
@@ -420,7 +429,7 @@ bool Chess_window::tile_in_check(Point& p) {
 		if (!tile_empty(temp) && black_king_ptr->point(0) != temp && white_king_ptr->point(0) != temp)break;
 	}
 	temp = p;
-	while (temp.x <= ls + 7 * sz && temp.y >= us) {
+	while (temp.x <= 0 + 7 * sz && temp.y >= 0) {
 		temp.x += sz;
 		temp.y -= sz;
 		if (hostile_present(temp)) {
@@ -432,7 +441,7 @@ bool Chess_window::tile_in_check(Point& p) {
 		if (!tile_empty(temp) && black_king_ptr->point(0) != temp && white_king_ptr->point(0) != temp)break;
 	}
 	temp = p;
-	while (temp.x >= ls && temp.y <= us + 7 * sz) {
+	while (temp.x >= 0 && temp.y <= 0 + 7 * sz) {
 		temp.x -= sz;
 		temp.y += sz;
 		if (hostile_present(temp)) {
@@ -444,7 +453,7 @@ bool Chess_window::tile_in_check(Point& p) {
 		if (!tile_empty(temp) && black_king_ptr->point(0) != temp && white_king_ptr->point(0) != temp)break;
 	}
 	temp = p;
-	while (temp.x >= ls && temp.y >= us) {
+	while (temp.x >= 0 && temp.y >= 0) {
 		temp.x -= sz;
 		temp.y -= sz;
 		if (hostile_present(temp)) {
@@ -506,7 +515,6 @@ bool Chess_window::checkmate() {
 		p_table = curr_figure->point(0);
 		p_t = true;
 	}
-
 	for (int i = 0; i < tiles.size(); i++) {
 
 		Point p{ tiles[i].point(0) };
@@ -541,7 +549,6 @@ bool Chess_window::checkmate() {
 						king_movement(p);
 						break;
 					}
-					pawn_promotion();
 					if (!king_in_check()) {
 						undo();
 						if (p_t) {												//Wiederherstellung curr_figure
@@ -689,19 +696,61 @@ void Chess_window::undo() {
 void Chess_window::pawn_promotion() {
 
 	for (int i = 0; i < 8; i++) {
-		Point top{ ls + i * sz,us };
-		Point bottom{ ls + i * sz,us + 7 * sz };
+		Point top{  i * sz,0 };
+		Point bottom{ i * sz,7 * sz };
 		for (int j = 0; j < figures.size(); j++) {
 			if (figures[j].point(0) == top && figures[j].what_kind() == F_kind::pawn) {
-				detach(figures[j]);
+				detach(figures[j]);																	//Bauern löschen
+				Chess_figure* temp_ptr = &figures[j];
+				delete temp_ptr;
 				figures.erase(j);
-				figures.push_back(new Queen{ top,sz });
+
+				promotion_ongoing = true;															//Blockiert tile_pressed
+				Promotion_window* pro = new Promotion_window({ 250,275 }, 650, 300, "Promotion");	//Neue Figur wählen
+				while (promotion_choice == F_kind::none)Fl::wait();									//Auswahl abwarten(nur optisch)
+				switch (promotion_choice) {
+				case(F_kind::queen):
+					figures.push_back(new Queen{ top,sz });
+					break;
+				case(F_kind::bishop):
+					figures.push_back(new Bishop{ top,sz });
+					break;
+				case(F_kind::knight):
+					figures.push_back(new Knight{ top,sz });
+					break;
+				case(F_kind::rook):
+					figures.push_back(new Rook{ top,sz });
+					break;
+				}
+				promotion_choice = F_kind::none;													//Auswahl zurück setzen
+				promotion_ongoing = false;															//tile_pressed wieder erlauben
 				figures[figures.size() - 1].set_fill_color(Color::white);
 			}
 			if (figures[j].point(0) == bottom && figures[j].what_kind() == F_kind::pawn) {
-				detach(figures[j]);
+				detach(figures[j]);																	//Bauern löschen
+				Chess_figure* temp_ptr = &figures[j];
+				delete temp_ptr;
 				figures.erase(j);
-				figures.push_back(new Queen{ bottom,sz });
+
+				promotion_ongoing = true;															//Blockiert tile_pressed
+				Promotion_window* pro = new Promotion_window({ 250,275 }, 650, 300, "Promotion");	//Neue Figur wählen
+				while (promotion_choice == F_kind::none)Fl::wait();									//Auswahl abwarten(nur optisch)
+				switch (promotion_choice) {
+				case(F_kind::queen):
+					figures.push_back(new Queen{ bottom,sz });
+					break;
+				case(F_kind::bishop):
+					figures.push_back(new Bishop{ bottom,sz });
+					break;
+				case(F_kind::knight):
+					figures.push_back(new Knight{ bottom,sz });
+					break;
+				case(F_kind::rook):
+					figures.push_back(new Rook{ bottom,sz });
+					break;
+				}
+				promotion_choice = F_kind::none;												//Auswahl zurück setzen
+				promotion_ongoing = false;														//tile_pressed wieder erlauben
 				figures[figures.size() - 1].set_fill_color(Color::black);
 				figures[figures.size() - 1].set_color(Color::white);
 			}
@@ -722,7 +771,7 @@ void Chess_window::pawn_movement(Point& p) {
 			x = -sz;
 			y = -sz;
 		}
-		temp = { start.x - sz, us + sz * 3 };
+		temp = { start.x - sz, sz * 3 };
 		if (p.x == curr_figure->point(0).x - sz && p.y == curr_figure->point(0).y - sz && is_ep(temp)) {
 			x = -sz;
 			y = -sz;
@@ -739,7 +788,7 @@ void Chess_window::pawn_movement(Point& p) {
 			x = sz;
 			y = -sz;
 		}
-		temp = { start.x + sz, us + sz * 3 };
+		temp = { start.x + sz, sz * 3 };
 		if (p.x == curr_figure->point(0).x + sz && p.y == curr_figure->point(0).y - sz && is_ep(temp)) {
 			x = sz;
 			y = -sz;
@@ -767,7 +816,7 @@ void Chess_window::pawn_movement(Point& p) {
 			x = -sz;
 			y = sz;
 		}
-		temp = { start.x - sz, us + sz * 4 };
+		temp = { start.x - sz, sz * 4 };
 		if (p.x == curr_figure->point(0).x - sz && p.y == curr_figure->point(0).y + sz && is_ep(temp)) {
 			x = -sz;
 			y = sz;
@@ -784,7 +833,7 @@ void Chess_window::pawn_movement(Point& p) {
 			x = sz;
 			y = sz;
 		}
-		temp = { start.x + sz, us + sz * 4 };
+		temp = { start.x + sz, sz * 4 };
 		if (p.x == curr_figure->point(0).x + sz && p.y == curr_figure->point(0).y + sz && is_ep(temp)) {
 			x = sz;
 			y = sz;
@@ -830,10 +879,10 @@ void Chess_window::pawn_movement(Point& p) {
 }
 void Chess_window::rook_movement(Point& p) {
 
-	Point upper_left{ ls,0 };
-	Point upper_right{ ls + 7 * sz,0 };
-	Point lower_left{ ls,us + 7 * sz };
-	Point lower_right{ ls + 7 * sz,us + 7 * sz };
+	Point upper_left{ 0,0 };
+	Point upper_right{ 7 * sz,0 };
+	Point lower_left{ 0,7 * sz };
+	Point lower_right{ 7 * sz, 7 * sz };
 	Point start{ curr_figure->point(0) };
 	Point temp{ curr_figure->point(0) };
 	Chess_figure* temp_target = nullptr;
@@ -1080,18 +1129,20 @@ void Chess_window::king_movement(Point& p) {
 			temp.y -= sz;
 		}
 	}
-	if (p.x < start.x && f_temp && f_temp->what_kind() == F_kind::rook) {
-		if (castling(p)) {
-			temp.x -= (2 * sz);
-			Chess_figure* R = get_figure(p);
-			R->move((sz * 3), 0);
+	if (!king_in_check()) {
+		if (p.x < start.x && f_temp && f_temp->what_kind() == F_kind::rook) {
+			if (castling(p)) {
+				temp.x -= (2 * sz);
+				Chess_figure* R = get_figure(p);
+				R->move((sz * 3), 0);
+			}
 		}
-	}
-	if (p.x > start.x && f_temp && f_temp->what_kind() == F_kind::rook) {
-		if (castling(p)) {
-			temp.x += (2 * sz);
-			Chess_figure* R = get_figure(p);
-			R->move(-(sz * 2), 0);
+		if (p.x > start.x && f_temp && f_temp->what_kind() == F_kind::rook) {
+			if (castling(p)) {
+				temp.x += (2 * sz);
+				Chess_figure* R = get_figure(p);
+				R->move(-(sz * 2), 0);
+			}
 		}
 	}
 	if (hostile_present(temp)) {
@@ -1143,12 +1194,12 @@ void Chess_window::restart_game() {
 		for (int y = 0; y < 8; y++) {
 
 			//Figuren
-			if ((y == 0 || y == 7) && (x == 0 || x == 7))figures.push_back(new Rook{ {ls + x * sz ,us + y * sz },sz });
-			if ((y == 0 || y == 7) && (x == 1 || x == 6))figures.push_back(new Knight{ {ls + x * sz ,us + y * sz },sz });
-			if ((y == 0 || y == 7) && (x == 2 || x == 5))figures.push_back(new Bishop{ {ls + x * sz ,us + y * sz },sz });
-			if ((y == 0 || y == 7) && (x == 3))figures.push_back(new Queen{ {ls + x * sz ,us + y * sz },sz });
-			if ((y == 0 || y == 7) && (x == 4))figures.push_back(new King{ {ls + x * sz ,us + y * sz },sz });
-			if (y == 1 || y == 6)figures.push_back(new Pawn{ {ls + x * sz ,us + y * sz },sz });
+			if ((y == 0 || y == 7) && (x == 0 || x == 7))figures.push_back(new Rook{ { x * sz , y * sz },sz });
+			if ((y == 0 || y == 7) && (x == 1 || x == 6))figures.push_back(new Knight{ { x * sz , y * sz },sz });
+			if ((y == 0 || y == 7) && (x == 2 || x == 5))figures.push_back(new Bishop{ { x * sz , y * sz },sz });
+			if ((y == 0 || y == 7) && (x == 3))figures.push_back(new Queen{ { x * sz , y * sz },sz });
+			if ((y == 0 || y == 7) && (x == 4))figures.push_back(new King{ { x * sz , y * sz },sz });
+			if (y == 1 || y == 6)figures.push_back(new Pawn{ { x * sz , y * sz },sz });
 			attach(figures[figures.size() - 1]);
 
 			if (y == 0 || y == 1) { figures[figures.size() - 1].set_color(Color::white); figures[figures.size() - 1].set_fill_color(Color::black); }
@@ -1168,70 +1219,81 @@ void Chess_window::restart_game() {
 Fl:redraw();
 }
 void Chess_window::tile_pressed() {
+	if (!promotion_ongoing) {									//Stopt das Spiel solange ein Bauer befördert wird
+		Chess_figure* temp_figure = nullptr;
+		Point p = get_point(Fl::event_x(), Fl::event_y());		//p=Koordinaten des aktuell gedrücketen Feldes
+		if (!tile_empty(p)) temp_figure = get_figure(p);
 
-	Chess_figure* temp_figure = nullptr;
-	Point p = get_point(Fl::event_x(), Fl::event_y());									//p=Koordinaten des aktuell gedrücketen Feldes
-	if (!tile_empty(p)) temp_figure = get_figure(p);
-
-	if (!tile_empty(p) && !curr_figure) {	//Spielstein auswählen
-		Chess_figure* temp = get_figure(p);
-		if (temp->fill_color() == c_turn) {
-			curr_figure = get_figure(p);
-			if (curr_figure->fill_color() == c_turn) curr_figure->set_color(Color::cyan);
+		if (!tile_empty(p) && !curr_figure) {	//Spielstein auswählen
+			Chess_figure* temp = get_figure(p);
+			if (temp->fill_color() == c_turn) {
+				curr_figure = get_figure(p);
+				if (curr_figure->fill_color() == c_turn) curr_figure->set_color(Color::cyan);
+			}
 		}
-	}
-	else {
-		if (!tile_empty(p) && curr_figure && !hostile_present(p) && !(curr_figure->what_kind() == F_kind::king && temp_figure->what_kind() == F_kind::rook)) {					//Auswahl ändern
-			reset_f_color();
-			curr_figure = get_figure(p);
-			if (curr_figure->fill_color() == c_turn) curr_figure->set_color(Color::cyan);
+		else {
+			if (!tile_empty(p) && curr_figure && !hostile_present(p) && !(curr_figure->what_kind() == F_kind::king && temp_figure->what_kind() == F_kind::rook)) {					//Auswahl ändern
+				reset_f_color();
+				curr_figure = get_figure(p);
+				if (curr_figure->fill_color() == c_turn) curr_figure->set_color(Color::cyan);
+			}
 		}
-	}
-	if (curr_figure && (tile_empty(p) || hostile_present(p) || temp_figure->what_kind() == F_kind::rook)) {
-		F_kind c_kind = curr_figure->what_kind();
+		if (curr_figure && (tile_empty(p) || hostile_present(p) || temp_figure->what_kind() == F_kind::rook)) {
+			F_kind c_kind = curr_figure->what_kind();
 
-		copy_to_buffer();		//Wird hier nur gebraucht falls man einen Undo Knopf einbauen möchte
+			copy_to_buffer();		//Wird hier nur gebraucht falls man einen Undo Knopf einbauen möchte
 
-		switch (c_kind) {
-		case F_kind::pawn:
-			pawn_movement(p);
-			break;
-		case F_kind::rook:
-			rook_movement(p);
-			break;
-		case F_kind::knight:
-			knight_movement(p);
-			break;
-		case F_kind::bishop:
-			bishop_movement(p);
-			break;
-		case F_kind::queen:
-			queen_movement(p);
-			break;
-		case F_kind::king:
-			king_movement(p);
-			break;
+			switch (c_kind) {
+			case F_kind::pawn:
+				pawn_movement(p);
+				break;
+			case F_kind::rook:
+				rook_movement(p);
+				break;
+			case F_kind::knight:
+				knight_movement(p);
+				break;
+			case F_kind::bishop:
+				bishop_movement(p);
+				break;
+			case F_kind::queen:
+				queen_movement(p);
+				break;
+			case F_kind::king:
+				king_movement(p);
+				break;
+			}
 		}
-	}
-	pawn_promotion();
-	check_ep();											//aktualisiert ep
-	refresh_figures();									//detached und attached alle Figuren nochmal, damit die nicht unter den Feldern verschwinden
-	Fl::redraw();
+		pawn_promotion();
+		check_ep();											//aktualisiert ep
+		refresh_figures();									//detached und attached alle Figuren nochmal, damit die nicht unter den Feldern verschwinden
+		Fl::redraw();
 
-	if (checkmate()) {									// Spielende
-		switch (fl_choice("Checkmate! New game?", "Yes", "No", 0)) {
-		case 0:
-			restart_game();								// Spielbrett neu aufbauen
-			break;
-		case 1:
-			quit();
-			break;
+		if (checkmate()) {									// Spielende
+			switch (fl_choice("Checkmate! New game?", "Yes", "No", 0)) {
+			case 0:
+				restart_game();								// Spielbrett neu aufbauen
+				break;
+			case 1:
+				quit();
+				break;
+			}
 		}
 	}
 }
 
 int main() try {
-	Chess_window win{ {100,100},1000,y_max(),"Schach" };
+
+	ifstream ifs{ "rules.txt" };
+	char c = 0;
+
+	while (c != '#') {
+		ifs.get(c);
+		if (c == '\n')text += "\n";
+		if (c != '#')text += c;
+	}
+
+	Chess_window win{ {100,0},sz*9,sz*8,"Schach" };
 
 	win.wait_for_button();
 }
@@ -1239,5 +1301,4 @@ catch (exception& e) {
 	cerr << e.what();
 	cin.get();
 }
-
 

@@ -121,6 +121,7 @@ namespace Graph_lib {
 		T& operator[](int i) { return *v[i]; }
 		const T& operator[](int i) const { return *v[i]; }
 		int size() const { return v.size(); }
+
 	};
 
 //	typedef double Fct(double);							//Anpassung wegen S533. Sonst lässt sich kein lambda(mit [n]) an Function übergeben

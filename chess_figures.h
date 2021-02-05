@@ -1,13 +1,14 @@
 #pragma once
 #include"Graph.h"
-#include"Simple_window.h"
+#include "GUI.h"
+using namespace Graph_lib;
 
 //Die Figurem sind nicht besonderes Hübsch, Malen war noch nie meine Stärke...
 
 
 //Unterscheidung der Figuren
 enum class F_kind {								//Art der Spielfigur
-	king = 1, queen, bishop, rook, knight, pawn
+	none,king , queen, bishop, rook, knight, pawn
 };
 bool operator==(F_kind a, F_kind b) {
 	char x = static_cast<char>(a);
@@ -25,9 +26,8 @@ bool operator!=(F_kind a, F_kind b) {
 struct Chess_figure :Shape {
 	int ssz = 0;
 	F_kind kind;
-	virtual F_kind what_kind() { return kind; }
-
-};
+	virtual F_kind what_kind() = 0;
+};					
 
 //Bauer
 class Pawn :public Chess_figure {
