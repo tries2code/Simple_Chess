@@ -162,7 +162,6 @@
     <ClInclude Include="Graph.h" />
     <ClInclude Include="GUI.h" />
     <ClInclude Include="Point.h" />
-    <ClInclude Include="Simple_window.h" />
     <ClInclude Include="std_lib_facilities.h" />
     <ClInclude Include="Sub_Windows.h" />
     <ClInclude Include="Window.h" />

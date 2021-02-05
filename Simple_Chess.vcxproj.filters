@@ -41,9 +41,6 @@
     <ClInclude Include="Point.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
-    <ClInclude Include="Simple_window.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
     <ClInclude Include="std_lib_facilities.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
